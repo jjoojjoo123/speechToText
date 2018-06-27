@@ -34,8 +34,8 @@ def score_calculating(string0, string1, shift0 = 0, shift1 = 0):
 			if string0[i] == string1[j]:
 				find_stick = True
 				left_max_score, left_best_sticks = score_calculating(string0[0:i], string1[0:j], shift0, shift1)
-				right_max_score, right_best_sticks = score_calculating(string0[i+1:len(string0)], string1[j+1:len(string1)], shift0+1+i, shift1+1+j)
-				now_sticks = left_best_sticks + [(shift0+i, shift1+j)] + right_best_sticks
+				right_max_score, right_best_sticks = score_calculating(string0[i + 1:len(string0)], string1[j + 1:len(string1)], shift0 + 1 + i, shift1 + 1 + j)
+				now_sticks = left_best_sticks + [(shift0 + i, shift1 + j)] + right_best_sticks
 				now_score = left_max_score + right_max_score + 2
 
 		if now_score > max_score:
@@ -57,7 +57,7 @@ def word_counter(strings, word_to_count):
 	
 
 def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_diff = [0, 0, 0, 0], mode = "right"):
-	strings_len = [len(strings[0]), len(strings[1]), len(strings[2]), len(strings[3])]
+	strings_len = [len(s) for s in strings]
 	
 	now_score = -2147483648
 	max_score = -2147483648
@@ -71,9 +71,9 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 	find_stick = False
 	
 	if mode == "right":
-		for i in range(0,2):
-			for j in range(0,len(sticks[i])):
-				for k in range(0,len(sticks[i][j])):
+		for i in range(0, 2):
+			for j in range(0, len(sticks[i])):
+				for k in range(0, len(sticks[i][j])):
 					sticks[i][j][k][1] -= shifts_diff[sticks[i][j][k][0]]
 	
 	top_stick_index = 0
@@ -85,11 +85,11 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 				
 				is_stick = False
 				left_strings = [strings[0][0:top_stick[0][1]], strings[1][0:top_stick[1][1]], strings[2][0:string2_index]]
-				right_strings = [strings[0][top_stick[0][1]+1:strings_len[0]],
-											strings[1][top_stick[1][1]+1:strings_len[1]],
-											strings[2][string2_index+1:strings_len[2]]]
+				right_strings = [strings[0][top_stick[0][1] + 1:strings_len[0]],
+											strings[1][top_stick[1][1] + 1:strings_len[1]],
+											strings[2][string2_index + 1:strings_len[2]]]
 				left_sticks = [sticks[0][0:top_stick_index]]
-				right_sticks = [sticks[0][top_stick_index+1:len(sticks[0])]]
+				right_sticks = [sticks[0][top_stick_index + 1:len(sticks[0])]]
 				
 				bottom_stick_index = 0
 				for bottom_stick in sticks[1]:
@@ -101,12 +101,12 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 				#the word is a stick
 				if is_stick == True:
 					left_strings.append(strings[3][0:sticks[1][bottom_stick_index][1][1]])
-					right_strings.append(strings[3][sticks[1][bottom_stick_index][1][1]+1:strings_len[3]])
+					right_strings.append(strings[3][sticks[1][bottom_stick_index][1][1] + 1:strings_len[3]])
 					left_sticks.append(sticks[1][0:bottom_stick_index])
-					right_sticks.append(sticks[1][bottom_stick_index+1:len(sticks[1])])
+					right_sticks.append(sticks[1][bottom_stick_index + 1:len(sticks[1])])
 					
 					left_shifts = shifts
-					right_shifts = [shifts[0]+1+top_stick[0][1], shifts[1]+1+top_stick[1][1], shifts[2]+1+string2_index, shifts[3]+1+sticks[1][bottom_stick_index][1][1]]
+					right_shifts = [shifts[0] + 1 + top_stick[0][1], shifts[1] + 1 + top_stick[1][1], shifts[2] + 1 + string2_index, shifts[3] + 1 + sticks[1][bottom_stick_index][1][1]]
 					left_shifts_diff = [0, 0, 0, 0]
 					right_shifts_diff = []
 					for i in range(0, 4):
@@ -120,7 +120,7 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 						adjust_bottom_stick = [[l[0], l[1] + shifts[l[0]]] for l in sticks[1][bottom_stick_index]]
 						
 						max_score = now_score
-						best_sticks = [left_best_sticks[0]+[adjust_top_stick+adjust_bottom_stick]+right_best_sticks[0], left_best_sticks[1]+right_best_sticks[1]]
+						best_sticks = [left_best_sticks[0] + [adjust_top_stick + adjust_bottom_stick] + right_best_sticks[0], left_best_sticks[1] + right_best_sticks[1]]
 				
 				#the word is not a stick
 				elif is_stick == False and strings_len[3] > 0:
@@ -138,18 +138,18 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 							break
 						
 					string3_start_right_index = string3_to_count_index_finish + 1
-					for string3_middle_index in range(string3_to_count_index_start, string3_to_count_index_finish+1):
+					for string3_middle_index in range(string3_to_count_index_start, string3_to_count_index_finish + 1):
 						if word_counter(left_strings, strings[3][string3_middle_index]) < word_counter(right_strings, strings[3][string3_middle_index]):
 							string3_start_right_index = string3_middle_index
 							break
 					
 					left_strings.append(strings[3][0:string3_start_right_index])
 					right_strings.append(strings[3][string3_start_right_index:strings_len[3]])
-					left_sticks.append(sticks[1][0:bottom_stick_index_before+1])
+					left_sticks.append(sticks[1][0:bottom_stick_index_before + 1])
 					right_sticks.append(sticks[1][bottom_stick_index_after:len(sticks[1])])
 					
 					left_shifts = shifts
-					right_shifts = [shifts[0]+1+top_stick[0][1], shifts[1]+1+top_stick[1][1], shifts[2]+1+string2_index, shifts[3]+1+string3_start_right_index-1]
+					right_shifts = [shifts[0] + 1 + top_stick[0][1], shifts[1] + 1 + top_stick[1][1], shifts[2] + 1 + string2_index, shifts[3] + 1 + string3_start_right_index-1]
 					left_shifts_diff = [0, 0, 0, 0]
 					right_shifts_diff = []
 					for i in range(0, 4):
@@ -163,7 +163,7 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 						adjust_top_stick = [[l[0], l[1] + shifts[l[0]]] for l in top_stick]
 						
 						max_score = now_score
-						best_sticks = [left_best_sticks[0]+[adjust_top_stick+[[2,string2_index+shifts[2]]]]+right_best_sticks[0], left_best_sticks[1]+right_best_sticks[1]]
+						best_sticks = [left_best_sticks[0] + [adjust_top_stick + [[2,string2_index + shifts[2]]]] + right_best_sticks[0], left_best_sticks[1] + right_best_sticks[1]]
 
 			string2_index += 1
 		
@@ -173,11 +173,11 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 				find_stick = True
 				is_stick = False
 				left_strings = [strings[0][0:top_stick[0][1]], strings[1][0:top_stick[1][1]], strings[3][0:string3_index]]
-				right_strings = [strings[0][top_stick[0][1]+1:strings_len[0]],
-											strings[1][top_stick[1][1]+1:strings_len[1]],
-											strings[3][string3_index+1:strings_len[3]]]
+				right_strings = [strings[0][top_stick[0][1] + 1:strings_len[0]],
+											strings[1][top_stick[1][1] + 1:strings_len[1]],
+											strings[3][string3_index + 1:strings_len[3]]]
 				left_sticks = [sticks[0][0:top_stick_index]]
-				right_sticks = [sticks[0][top_stick_index+1:len(sticks[0])]]
+				right_sticks = [sticks[0][top_stick_index + 1:len(sticks[0])]]
 				
 				for bottom_stick in sticks[1]:
 					if bottom_stick[0][1] == string3_index:
@@ -200,18 +200,18 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 							break
 						
 					string2_start_right_index = string2_to_count_index_finish + 1
-					for string2_middle_index in range(string2_to_count_index_start, string2_to_count_index_finish+1):
+					for string2_middle_index in range(string2_to_count_index_start, string2_to_count_index_finish + 1):
 						if word_counter(left_strings, strings[2][string2_middle_index]) < word_counter(right_strings, strings[2][string2_middle_index]):
 							string2_start_right_index = string2_middle_index
 							break
 					
 					left_strings.insert(2, strings[2][0:string2_start_right_index])
 					right_strings.insert(2, strings[2][string2_start_right_index:strings_len[2]])
-					left_sticks.insert(2, sticks[1][0:bottom_stick_index_before+1])
+					left_sticks.insert(2, sticks[1][0:bottom_stick_index_before + 1])
 					right_sticks.insert(2, sticks[1][bottom_stick_index_after:len(sticks[1])])
 					
 					left_shifts = shifts
-					right_shifts = [shifts[0]+1+top_stick[0][1], shifts[1]+1+top_stick[1][1], shifts[2]+1+string2_start_right_index-1, shifts[3]+1+string3_index]
+					right_shifts = [shifts[0] + 1 + top_stick[0][1], shifts[1] + 1 + top_stick[1][1], shifts[2] + 1 + string2_start_right_index-1, shifts[3] + 1 + string3_index]
 					left_shifts_diff = [0, 0, 0, 0]
 					right_shifts_diff = []
 					for i in range(0, 4):
@@ -224,7 +224,7 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 					if now_score > max_score:
 						adjust_top_stick = [[l[0], l[1] + shifts[l[0]]] for l in top_stick]
 						max_score = now_score
-						best_sticks = [left_best_sticks[0]+[adjust_top_stick+[[3,string3_index+shifts[3]]]]+right_best_sticks[0], left_best_sticks[1]+right_best_sticks[1]]
+						best_sticks = [left_best_sticks[0] + [adjust_top_stick + [[3,string3_index + shifts[3]]]] + right_best_sticks[0], left_best_sticks[1] + right_best_sticks[1]]
 
 			string3_index += 1
 		
