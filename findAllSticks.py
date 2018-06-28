@@ -180,12 +180,13 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 				right_sticks = [sticks[0][top_stick_index + 1:len(sticks[0])]]
 				
 				for bottom_stick in sticks[1]:
-					if bottom_stick[0][1] == string3_index:
+					if bottom_stick[1][1] == string3_index:
 						is_stick = True
 						break
-
+				
 				#the word is not a stick
 				if is_stick == False and strings_len[2] > 0:
+					
 					string2_to_count_index_start = 0
 					string2_to_count_index_finish = strings_len[2] - 1
 					bottom_stick_index_before = -1
@@ -326,5 +327,83 @@ if __name__ == '__main__':
 				eachStick.sort(key=lambda x :x[0])
 		
 		best_sticks = [best_sticks_top_to_bottom[0] , best_sticks_bottom_to_top[0]]
-		print(best_sticks)
+
+		for top_stick in best_sticks[0]:
+			for bottom_stick in best_sticks[1]:
+				if all(elem in bottom_stick for elem in top_stick):
+					best_sticks[0].remove(top_stick)
+				elif all(elem in top_stick for elem in bottom_stick):
+					best_sticks[1].remove(bottom_stick)
+				elif any(elem in top_stick for elem in bottom_stick):
+					if len(top_stick) >= len(bottom_stick):
+						best_sticks[1].remove(bottom_stick)
+					else:
+						best_sticks[0].remove(top_stick)
+
+		
+		best_sticks = best_sticks[0] + best_sticks[1]
+		
+		crosses = {}
+		for i in range(0,len(best_sticks)):
+			crosses[i] = []
+		for i in range(0, len(best_sticks) - 1):
+			for j in range(i+1, len(best_sticks)):
+				if len(best_sticks[i]) >= 3 and len(best_sticks[j]) >= 3:
+					order = []
+					find_cross = False
+					for i_word in best_sticks[i]:
+						for j_word in best_sticks[j]:
+							if i_word[0] ==  j_word[0]:
+								if len(order) == 0:
+									if i_word[1] > j_word[1]:
+										order = [j, i]
+									else:
+										order = [i, j]
+								else:
+									if i_word[1] > j_word[1] and order[0] == i:
+										crosses[i].append(j)
+										crosses[j].append(i)
+										find_cross = True
+										break
+									elif i_word[1] < j_word[1] and order[0] == j:
+										crosses[i].append(j)
+										crosses[j].append(i)
+										find_cross = True
+										break
+						if find_cross == True:
+							break
+		
+		no_cross_sticks = []
+		while any(len(crosses[x]) > 0 for x in crosses):
+			max_len = 0
+			index_to_delete = -1
+			for i in range(0, len(crosses)):
+				if len(crosses[i]) > max_len:
+					index_to_delete = i
+					max_len = len(crosses[i])
+			
+			if len(best_sticks[index_to_delete]) == 4:
+				no_cross_sticks.append([best_sticks[index_to_delete][0], best_sticks[index_to_delete][1]])
+				no_cross_sticks.append([best_sticks[index_to_delete][2], best_sticks[index_to_delete][3]])
+				best_sticks[index_to_delete] = []
+			
+			elif best_sticks[index_to_delete][0][0] == 0 and best_sticks[index_to_delete][1][0] == 1:
+				no_cross_sticks.append([best_sticks[index_to_delete][0], best_sticks[index_to_delete][1]])
+				best_sticks[index_to_delete] = []
+			
+			elif best_sticks[index_to_delete][1][0] == 2 and best_sticks[index_to_delete][2][0] == 3:
+				no_cross_sticks.append([best_sticks[index_to_delete][1], best_sticks[index_to_delete][2]])
+				best_sticks[index_to_delete] = []
+			
+			crosses[index_to_delete] = []
+			for i in range(0, len(crosses)):
+				if index_to_delete in crosses[i]:
+					crosses[i].remove(index_to_delete)
+			
+		best_sticks = list(filter(lambda a: a != [], best_sticks))
+		no_cross_sticks += best_sticks
+		
+		print(no_cross_sticks)
+				
+		
 		
