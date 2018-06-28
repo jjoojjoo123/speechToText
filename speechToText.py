@@ -2,6 +2,14 @@ from pynput.keyboard import Key, KeyCode, Listener
 import pyaudio
 import wave
 import time
+import globalvar as gl
+import API_keys
+
+ibm_username = gl.get_value("ibm_username")
+ibm_password = gl.get_value("ibm_password")
+wit_key = gl.get_value("wit_key")
+houndify_id = gl.get_value("houndify_id")
+houndify_key = gl.get_value("houndify_key")
 
 class Recorder(object):
     #A recorder class for recording audio to a WAV file.
@@ -126,7 +134,7 @@ class RecordingFile(Listener):
                 
             try:
                 #password:b04@NTUIM,有language參數(沒有zh-TW)
-                ibm_result = r.recognize_ibm(audio,username="6974fcf1-e18d-4635-a6c5-a6f541ba2974",password="SylKxLg5EscF",language='en-US')
+                ibm_result = r.recognize_ibm(audio,username=ibm_username,password=ibm_password,language='en-US')
                 print("ibm : ", ibm_result)
             except:
                 ibm_result = "Exception: ibm cannot recognize!"
@@ -134,7 +142,7 @@ class RecordingFile(Listener):
                 
             try:
                 #在網頁裡面改語言
-                wit_result = r.recognize_wit(audio,key="E6OJLZUZKLQ5LIIQH44Y6R5LSLWHXKP6")
+                wit_result = r.recognize_wit(audio,key=wit_key)
                 print("wit : ", wit_result)
             except:
                 wit_result = "Exception: wit cannot recognize!"
@@ -142,7 +150,7 @@ class RecordingFile(Listener):
 
             try:
                 #每日限額100單位,沒有language參數
-                houndify_result = r.recognize_houndify(audio,client_id="ux0OcpCNbi59F-LnFTf8fA==",client_key="3m8lOoYBPVsGPDubKGJY0Ug8m4qZRKpUp05jFEUDBZG6YKhLsbgtM1NMua2VJQq7ZNXJn2bQbfCYxGdFMKmuUA==")
+                houndify_result = r.recognize_houndify(audio,client_id=houndify_id,client_key=houndify_key)
                 print("houndify : ", houndify_result)
             except:
                 houndify_result = "Exception: houndify cannot recognize!"
@@ -170,7 +178,6 @@ class RecordingFile(Listener):
 
 
 def main():
-
     print("Press ESC to start/stop!")
 
     class MyListener(Listener):
