@@ -1,6 +1,6 @@
 import copy
 import itertools
-
+from collections import Counter
 
 class Result():
 	def __init__(self, API, str):
@@ -180,12 +180,13 @@ def advance_score_calculating(strings, sticks, shifts = [0, 0, 0, 0], shifts_dif
 				right_sticks = [sticks[0][top_stick_index + 1:len(sticks[0])]]
 				
 				for bottom_stick in sticks[1]:
-					if bottom_stick[0][1] == string3_index:
+					if bottom_stick[1][1] == string3_index:
 						is_stick = True
 						break
-
+				
 				#the word is not a stick
 				if is_stick == False and strings_len[2] > 0:
+					
 					string2_to_count_index_start = 0
 					string2_to_count_index_finish = strings_len[2] - 1
 					bottom_stick_index_before = -1
@@ -252,8 +253,68 @@ def sticks_position_change(sticks):
 				else:
 					word[0] -= 2
 	return sticks
-	
 
+# def word_selection(strings):
+# 	result = []
+# 	words_to_select = []
+# 	for string in strings:
+# 		words_to_select.append(' '.join(string))
+# 	word_counts = Counter(words_to_select)
+# 	if word_counts.most_common(1)[0][1] == 1:
+# 		result.append(words_to_select[google_index])
+# 	else:
+# 		word_counts.most_common(1)[0][0]
+# 	return result
+	
+# def all_in_one(strings, ordered_sticks, google_index, shifts = [0, 0, 0, 0]):
+# 	strings_to_select = []
+# 	strings_to_pass = []
+# 	now_result = []
+# 	for stick in ordered_sticks:
+# 		for word in stick:
+# 			word[1] -= shifts[word[0]]
+	
+# 	if len(ordered_sticks) == 0:
+# 		now_result.insert(0, word_selection(strings))
+# 		return now_result
+		
+# 	if len(ordered_sticks[0]) == 4:
+# 		for i in range(0, 4):
+# 			if ordered_sticks[0][i][1] == 0:
+# 				strings_to_select.append([])
+# 				strings_to_pass.append(strings[i][1:len(strings[i])])
+# 			else:
+# 				strings_to_select.append(strings[i][0:ordered_sticks[0][i][1]])
+# 				strings_to_pass.append(strings[i][ordered_sticks[0][i][1]+1:len(strings[i])])
+# 			shifts[i] = ordered_sticks[0][i][1]
+		
+		
+# 	if len(ordered_sticks[0]) == 3:
+# 		average_index = round((ordered_sticks[0][0][1] + ordered_sticks[0][1][1] + ordered_sticks[0][2][1])/3)
+# 		show_index = []
+# 		for i in range(0, 3):
+# 			show_index.append(ordered_sticks[0][i][0])
+# 			if ordered_sticks[0][i][1] == 0:
+# 				strings_to_select.append([])
+# 			else:
+# 				strings_to_select.append(strings[i][0:ordered_sticks[0][i][1]])
+# 			shifts[i] = ordered_sticks[0][i][1]
+# 		the_rest_index_set = set([0,1,2,3]) - set(show_index)
+# 		the_rest_index = [i for i in the_rest_index_set][0]
+# 		strings_to_select.insert(the_rest_index, strings[0:average_index])
+# 		shifts.insert(the_rest_index, average_index)
+	
+# 	del ordered_sticks[0]
+# 	now_result = all_in_one(strings_to_pass, ordered_sticks, google_index, shifts)
+# 	now_result.insert(0, word_selection(strings_to_select))
+	
+# 	for stick in ordered_sticks:
+# 		for word in stick:
+# 			word[1] += shifts[word[0]]
+	
+	
+# 	return now_result
+	
 if __name__ == '__main__':
 	results = []
 	while True:
@@ -276,13 +337,6 @@ if __name__ == '__main__':
 		string1 = results[comb[1]].str
 		max_score, best_sticks = score_calculating(string0, string1)
 		result_combs.append(Result_comb(comb, results[comb[0]], results[comb[1]], max_score, best_sticks))
-		print(comb)
-		print(string0)
-		print(string1)
-		print("score:%d" % max_score)
-		print(best_sticks)
-		print("----------------------------")
-	
 	
 	if result_number == 4:
 		result_comb0 = type('Result_comb()', (), {})()
@@ -326,5 +380,141 @@ if __name__ == '__main__':
 				eachStick.sort(key=lambda x :x[0])
 		
 		best_sticks = [best_sticks_top_to_bottom[0] , best_sticks_bottom_to_top[0]]
-		print(best_sticks)
+
+		for i in range(0, len(best_sticks[0])):
+			for j in range(0, len(best_sticks[1])):
+				if all(elem in best_sticks[1][j] for elem in best_sticks[0][i]):
+					best_sticks[0][i] = []
+				elif all(elem in best_sticks[0][i] for elem in best_sticks[1][j]):
+					best_sticks[1][j] = []
+				elif any(elem in best_sticks[0][i] for elem in best_sticks[1][j]):
+					if len(best_sticks[0][i]) >= len(best_sticks[1][j]):
+						best_sticks[1][j] = []
+					else:
+						best_sticks[0][i] = []
+		best_sticks[0] = list(filter(lambda a: a != [], best_sticks[0]))
+		best_sticks[1] = list(filter(lambda a: a != [], best_sticks[1]))
+
+		best_sticks = best_sticks[0] + best_sticks[1]
+		
+		crosses = {}
+		for i in range(0,len(best_sticks)):
+			crosses[i] = []
+		for i in range(0, len(best_sticks) - 1):
+			for j in range(i+1, len(best_sticks)):
+				if len(best_sticks[i]) >= 3 and len(best_sticks[j]) >= 3:
+					order = []
+					find_cross = False
+					for i_word in best_sticks[i]:
+						for j_word in best_sticks[j]:
+							if i_word[0] ==  j_word[0]:
+								if len(order) == 0:
+									if i_word[1] > j_word[1]:
+										order = [j, i]
+									else:
+										order = [i, j]
+								else:
+									if i_word[1] > j_word[1] and order[0] == i:
+										crosses[i].append(j)
+										crosses[j].append(i)
+										find_cross = True
+										break
+									elif i_word[1] < j_word[1] and order[0] == j:
+										crosses[i].append(j)
+										crosses[j].append(i)
+										find_cross = True
+										break
+						if find_cross == True:
+							break
+		
+		# solve cross sticks
+		no_cross_sticks = []
+		while any(len(crosses[x]) > 0 for x in crosses):
+			max_len = 0
+			index_to_delete = -1
+			for i in range(0, len(crosses)):
+				if len(crosses[i]) > max_len:
+					index_to_delete = i
+					max_len = len(crosses[i])
+			
+			if len(best_sticks[index_to_delete]) == 4:
+				no_cross_sticks.append([best_sticks[index_to_delete][0], best_sticks[index_to_delete][1]])
+				no_cross_sticks.append([best_sticks[index_to_delete][2], best_sticks[index_to_delete][3]])
+				best_sticks[index_to_delete] = []
+			
+			elif best_sticks[index_to_delete][0][0] == 0 and best_sticks[index_to_delete][1][0] == 1:
+				no_cross_sticks.append([best_sticks[index_to_delete][0], best_sticks[index_to_delete][1]])
+				best_sticks[index_to_delete] = []
+			
+			elif best_sticks[index_to_delete][1][0] == 2 and best_sticks[index_to_delete][2][0] == 3:
+				no_cross_sticks.append([best_sticks[index_to_delete][1], best_sticks[index_to_delete][2]])
+				best_sticks[index_to_delete] = []
+			
+			crosses[index_to_delete] = []
+			for i in range(0, len(crosses)):
+				if index_to_delete in crosses[i]:
+					crosses[i].remove(index_to_delete)
+			
+		best_sticks = list(filter(lambda a: a != [], best_sticks))
+		no_cross_sticks += best_sticks
+		
+		
+		#sort those no_cross_sticks
+		temp_sticks_order_in_string = {0:[], 1:[], 2:[], 3:[]}
+		for stick_index in range(0, len(no_cross_sticks)):
+			for word in no_cross_sticks[stick_index]:
+				if len(temp_sticks_order_in_string[word[0]]) == 0:
+					temp_sticks_order_in_string[word[0]].append((stick_index, word[1]))
+				else:
+					index_to_insert = 0
+					for i in range(0, len(temp_sticks_order_in_string[word[0]])):
+						if word[1] > temp_sticks_order_in_string[word[0]][i][1]:
+							index_to_insert = i+1
+
+					temp_sticks_order_in_string[word[0]].insert(index_to_insert, (stick_index, word[1]))
+		
+		sticks_order_in_string = {0:[], 1:[], 2:[], 3:[]}
+		for string_index in temp_sticks_order_in_string:
+			for tuple in temp_sticks_order_in_string[string_index]:
+				sticks_order_in_string[string_index].append(tuple[0])
+		
+				
+		stick_order = sticks_order_in_string[0]
+		for string_index in range(1, 4):
+			for i in range(0, len(sticks_order_in_string[string_index])):
+				if sticks_order_in_string[string_index][i] not in stick_order:
+					inserted = False
+					for j in range(i-1, -1, -1):
+						if sticks_order_in_string[string_index][j] in stick_order:
+							stick_order.insert(stick_order.index(sticks_order_in_string[string_index][j])+1, sticks_order_in_string[string_index][i])
+							inserted = True
+							break
+					if inserted == False:
+						for j in range(i+1, len(sticks_order_in_string[string_index])):
+							if sticks_order_in_string[string_index][j] in stick_order:
+								stick_order.insert(stick_order.index(sticks_order_in_string[string_index][j]), sticks_order_in_string[string_index][i])
+								inserted = True
+								break
+					if inserted == False:
+						stick_order.insert(0, sticks_order_in_string[string_index][i])
+		
+		ordered_sticks = []
+		for i in stick_order:
+			ordered_sticks.append(no_cross_sticks[i])
+		for stick in ordered_sticks:
+			print(stick)
+		
+		google_index = 0
+		google_str = ""
+		if result_comb0.result0.API == "google":
+			google_str = result_comb0.result0.string0
+		elif result_comb0.result1.API == "google":
+			google_str = result_comb0.result0.string0
+		elif result_comb1.result0.API == "google":
+			google_str = result_comb0.result0.string0
+		elif result_comb1.result1.API == "google":
+			google_str = result_comb0.result0.string0
+		
+		if google_str != "":
+			google_index = strings.index(google_str)
 		
