@@ -4,12 +4,18 @@ import wave
 import time
 import globalvar as gl
 import API_keys
+import findAllSticks
+import os
+import weight
 
 ibm_username = gl.get_value("ibm_username")
 ibm_password = gl.get_value("ibm_password")
 wit_key = gl.get_value("wit_key")
 houndify_id = gl.get_value("houndify_id")
 houndify_key = gl.get_value("houndify_key")
+
+weight = gl.get_value("weight")
+threshold = gl.get_value("threshold")
 
 class Recorder(object):
     #A recorder class for recording audio to a WAV file.
@@ -39,6 +45,7 @@ class RecordingFile(Listener):
         self.wavefile = self._prepare_file(self.fname, self.mode)
         self._stream = None
         self.results = []
+        self.no_exception = True
 
     def on_press(self, key):
         if key == Key.esc:
@@ -61,9 +68,10 @@ class RecordingFile(Listener):
             audio = self._stream.read(self.frames_per_buffer)
             self.wavefile.writeframes(audio)
         return None
-
+		
     def start_recording(self):
         # Use a stream with a callback in non-blocking mode
+        self.no_exception = True
         self._stream = self._pa.open(format=pyaudio.paInt16,
                                         channels=self.channels,
                                         rate=self.rate,
@@ -90,19 +98,23 @@ class RecordingFile(Listener):
                 return in_data, pyaudio.paComplete
         return callback
 
-
     def close(self):
         self._stream.close()
         self._pa.terminate()
         self.wavefile.close()
         self.results = self.recognize()
         self.write_text(self.results)
+        if self.no_exception == True:
+            findAllSticks.to_final_result(self.results, weight, threshold)
+        else:
+            print("Your voice is not clear enough, please try again!")
+        print("Press ESC to start/stop! Or press 'Q' to exit!")
 
     def _prepare_file(self, fname, mode='wb'):
         wavefile = wave.open(fname, mode)
         wavefile.setnchannels(self.channels)
         wavefile.setsampwidth(self._pa.get_sample_size(pyaudio.paInt16))
-        wavefile.setframerate(self.rate)
+        wavefile.setframerate(self.rate*0.9)
         return wavefile
 
     def recognize(self):
@@ -113,14 +125,21 @@ class RecordingFile(Listener):
         import speech_recognition as sr
         r = sr.Recognizer()
         with sr.AudioFile(audio_to_trans) as source:
-            r.adjust_for_ambient_noise(source, duration=1)
+            r.adjust_for_ambient_noise(source)
             audio = r.record(source)
+            print("-------------------------------")
 
             try:
                 #有language參數
                 google_result = r.recognize_google(audio,language='en-US')
-                print("google : ", google_result)
+                if google_result == '':
+                    self.no_exception = False
+                    google_result = "Exception: google cannot recognize!"
+                    print(google_result)
+                else:
+                    print("google : ", google_result)
             except:
+                self.no_exception = False
                 google_result = "Exception: google cannot recognize!"
                 print(google_result)
 
@@ -135,24 +154,42 @@ class RecordingFile(Listener):
             try:
                 #password:b04@NTUIM,有language參數(沒有zh-TW)
                 ibm_result = r.recognize_ibm(audio,username=ibm_username,password=ibm_password,language='en-US')
-                print("ibm : ", ibm_result)
+                if ibm_result == '':
+                    self.no_exception = False
+                    ibm_result = "Exception: ibm cannot recognize!"
+                    print(ibm_result)
+                else:
+                    print("ibm : ", ibm_result)
             except:
+                self.no_exception = False
                 ibm_result = "Exception: ibm cannot recognize!"
                 print(ibm_result)
                 
             try:
                 #在網頁裡面改語言
                 wit_result = r.recognize_wit(audio,key=wit_key)
-                print("wit : ", wit_result)
+                if wit_result == '':
+                    self.no_exception = False
+                    wit_result = "Exception: wit cannot recognize!"
+                    print(wit_result)
+                else:
+                    print("wit : ", wit_result)
             except:
+                self.no_exception = False
                 wit_result = "Exception: wit cannot recognize!"
                 print(wit_result)
 
             try:
                 #每日限額100單位,沒有language參數
                 houndify_result = r.recognize_houndify(audio,client_id=houndify_id,client_key=houndify_key)
-                print("houndify : ", houndify_result)
+                if houndify_result == '':
+                    self.no_exception = False
+                    houndify_result = "Exception: houndify cannot recognize!"
+                    print(houndify_result)
+                else:
+                    print("houndify : ", houndify_result)
             except:
+                self.no_exception = False
                 houndify_result = "Exception: houndify cannot recognize!"
                 print(houndify_result)
 
@@ -163,7 +200,7 @@ class RecordingFile(Listener):
 #            except:
 #                sphinx_result ="Exception: sphinx cannot recognize!" 
 #                print(sphinx_result)
-
+            print("-------------------------------")
             results = [google_result, ibm_result, wit_result, houndify_result]
             return results
 
@@ -178,7 +215,7 @@ class RecordingFile(Listener):
 
 
 def main():
-    print("Press ESC to start/stop!")
+    print("Press ESC to start/stop! Or press 'Q' to exit!")
 
     class MyListener(Listener):
 
@@ -187,6 +224,8 @@ def main():
             self.recording = False
 
         def on_press(self, key):
+            if key == KeyCode.from_char('q'):
+                os._exit(0)
             if key == Key.esc and self.recording == False:
                 self.recording = True
                 r = Recorder()
