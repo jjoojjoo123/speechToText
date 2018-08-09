@@ -2,7 +2,7 @@ import re
 import numpy as np
 from itertools import combinations, product, chain
 from typing import List, Tuple, Any
-from collections import namedtuple, Counter
+from collections import namedtuple, deque
 from disjoint_set import disjoint_set
 from copy import deepcopy
 
@@ -604,10 +604,10 @@ class StringAlign():
 			param: base_point and merge_point is used here.
 				base_point: called when no anchor available, input l1, l2, output the score(point)
 				merge_point: called to merge the score(point) of left and of right.
-				             input (left of now_anchor of l1, of l2), (right of now_anchor of l1, of l2),
-				                    ans returned by left recursion, and that by right one.
-				             output the score(point)
-				             ans :: return type of _compare_xxx
+							 input (left of now_anchor of l1, of l2), (right of now_anchor of l1, of l2),
+									ans returned by left recursion, and that by right one.
+							 output the score(point)
+							 ans :: return type of _compare_xxx
 			anchors
 			memo: not used in this function. just pass it into _compare_detail
 			now_anchor: meaning which anchor is fixed at the very step.
@@ -654,54 +654,43 @@ class StringAlign():
 			memo[hashable_sign] = cls.Ans(similarity, anchors_to_choose)
 		return memo[hashable_sign]
 
-def print_final_result(S, weight, threshold):
-	print("-------------------------------")
-	print(' '.join(S.final_result(weight, threshold)))
-	print("-------------------------------")
+def give_param(way):
+	p = Param()
+	if way == 'wayne':
+		p.init_value = 0.0
+		p.base_point = lambda l1, l2: 1 / (len(l1) + len(l2) + 1)
+		def merge_point(left, right, ans1, ans2):
+			left_len = len(left[0]) + len(left[1])
+			right_len = len(right[0]) + len(right[1])
+			left_point, right_point = ans1.similarity, ans2.similarity
+			return (left_point * left_len + right_point * right_len + 2) / (left_len + right_len + 2)
+		p.merge_point = merge_point
+	elif way == 'james':
+		p.init_value = -np.inf
+		p.base_point = lambda l1, l2: -(len(l1) + len(l2))
+		p.merge_point = lambda l, r, a1, a2: a1.similarity + a2.similarity + 2
+    return p
 
-p = Param()
-way = 'wayne'
-if way == 'wayne':
-	p.init_value = 0.0
-	p.base_point = lambda l1, l2: 1 / (len(l1) + len(l2) + 1)
-	def merge_point(left, right, ans1, ans2):
-		left_len = len(left[0]) + len(left[1])
-		right_len = len(right[0]) + len(right[1])
-		left_point, right_point = ans1.similarity, ans2.similarity
-		return (left_point * left_len + right_point * right_len + 2) / (left_len + right_len + 2)
-	p.merge_point = merge_point
-elif way == 'james':
-	p.init_value = -np.inf
-	p.base_point = lambda l1, l2: -(len(l1) + len(l2))
-	p.merge_point = lambda l, r, a1, a2: a1.similarity + a2.similarity + 2
-
-def to_final_result(API_results, weight, threshold):
+if __name__ == '__main__':
 	S = StringAlign()
-	S += API_results
+	S += ['later that day when the princess was sitting at the table something with her coming up the marble stairs',
+	'later that day one that princess was sitting at the table something was heard coming up the marble stairs',
+	'later that day when the princess was sitting at the table something with her coming up the marble stairs',
+	'later that day when the princess was sitting at the table something was heard coming up the marbles dears']
 
+	p = give_param('james')
 	S.evaluate(p)
-	#print(S)
+	print(S)
 	#x = S.big_anchor_concat_james()
 	x = S.big_anchor_concat_heuristic(p)
 	x = x['word_set']
 	print(S.str_big_anchor())
+	#print(x.sets())
+	#print(x.copy().sets())
 	
-	print("")
-	print_final_result(S, weight, threshold)
-	
-	return 0
-
-if __name__ == '__main__':
-	S = StringAlign()
-	S += ['a b c', 'a b c', 'c a c', 'c a d']
-	weight = [1, 1, 1, 1]
-	threshold = 1.5
-	
-	S.evaluate(p)
-	#print(S)
-	#x = S.big_anchor_concat_james()
-	x = S.big_anchor_concat_heuristic(p)
-	x = x['word_set']
-	S.print_big_anchor()
-	
-	print_final_result(S, weight, threshold)
+	result = S.final_result([1.5, 1, 1, 1], 2)
+	print(list(result))
+	#x = S.big_anchor_concat_heuristic(p)
+	#print(S.str_big_anchor())
+	result = S.final_result([1.5, 1, 1, 1], 3)
+	print(list(result))
