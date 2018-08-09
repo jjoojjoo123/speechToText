@@ -33,9 +33,26 @@
   <h2>Recommendation</h2>
   <textarea id="recommendation" style="width:800px;height:100px;"></textarea>
 
+  <h2>Tuning</h2>
+  <p id="weight">API weight: </p>
+  <p>Threshold: <input type="number" id="threshold" value="2" style="width: 50px" required></p>
+
   <h2>Log</h2>
   <pre id="log"></pre>
 
+  <script>
+  var num_of_API = 4;
+  var weight_tuning = document.getElementById("weight");
+  for(var i = 0;i < num_of_API;i++){
+    var node = document.createElement("input");
+    node.setAttribute("id", "weight" + i);
+    node.setAttribute("type", "number");
+    node.setAttribute("value", 1);
+    node.setAttribute("style", "width:50px");
+    node.required = true;
+    weight_tuning.appendChild(node);
+  }
+  </script>
   <script>
   function __log(e, data) {
     log.innerHTML += "\n" + e + " " + (data || '');
@@ -130,6 +147,12 @@
       document.getElementById("results").innerHTML = "Recognizing..."
       var fd = new FormData();
       fd.append('fname', hf.download);
+      var weight = [];
+      for(var i = 0;i < num_of_API;i++){
+        weight.push(document.getElementById("weight" + i).value || 1);
+      }
+      fd.append('weight', weight);
+      fd.append('threshold', document.getElementById("threshold").value || 1);
       $.ajax({
           type: 'POST',
           url: '/recog',
