@@ -53,6 +53,8 @@ class Param():
 
 class StringAlign():
 	c1, c2, c3 = re.compile(R"([^\w\s'])"), re.compile(R"\s+"), re.compile(R"^\s|\s$")
+	graph_module = None
+	graph_module_tryorder = ['networkx', 'pyswip']
 	init_similarity = 0
 	State = namedtuple("State", "length Dict")
 	Ans = namedtuple('Ans', "similarity anchors")
@@ -113,6 +115,19 @@ class StringAlign():
 		sol = type(self)()
 		sol._l = self._l.copy() #
 		return sol
+	@classmethod
+	def decide_graph_module(cls):
+		if cls.graph_module is not None:
+			return
+		for module in cls.graph_module_tryorder:
+			try:
+				exec(f'import {module}')
+			except ImportError: #precisely, ModuleNotFoundError in Py3.6
+				continue
+			else:
+				cls.graph_module = module
+				return
+		print('No module in {} has been installed!'.format(', '.join(cls.graph_module_tryorder)))
 	def evaluate(self, param: Param):
 		l = self._l
 		n = len(l)
@@ -144,7 +159,7 @@ class StringAlign():
 			for k, l in anchors:
 				word_set.union((i, k), (j, l))
 			sentences_set.union(i, j)
-		print(word_set)
+		#print(word_set)
 		self._big_anchor_state = {'word_set': word_set}
 		return self._big_anchor_state
 		#this function should return one that contains word_set
@@ -474,58 +489,93 @@ class StringAlign():
 		if 'graph' in self._big_anchor_state:
 			return self._big_anchor_state['graph']
 		word_set = self._big_anchor_state['word_set']
-		try:
+		self.decide_graph_module()
+		if self.graph_module == 'networkx':
 			import networkx as nx
-		except ImportError: #precisely, ModuleNotFoundError in Py3.6
-			print('module networkx is not installed!')
+			G = nx.DiGraph()
+			index = word_set.index()
+			for i in range(n):
+				G.add_node(index[(i, 0)], word = self._l[i][0])
+				for j, word in enumerate(self._l[i][1:], 1):
+					G.add_edge(index[(i, j - 1)], index[(i, j)])
+					G.nodes[index[(i, j)]]['word'] = word
+				for j, word in enumerate(self._l[i]):
+					if 'appearance' not in G.nodes[index[(i, j)]]:
+						G.nodes[index[(i, j)]]['appearance'] = []
+					G.nodes[index[(i, j)]]['appearance'].append(i)
+			self._big_anchor_state['graph'] = G
+			return G
+		elif self.graph_module == 'pyswip':
+			from pyswip import Prolog
+			prolog = Prolog()
+			prolog.consult('knowledge.pl')
+			#clear the previos graph which is created in this object
+			deque(prolog.query(f'clear_register({id(self)})'), maxlen = 0)
+			index = word_set.index()
+			id_word_map = {} #prevent overlapping
+			for i in range(n):
+				id_word_map[index[(i, 0)]] = self._l[i][0]
+				for j, word in enumerate(self._l[i][1:], 1):
+					prolog.assertz(f'edge({index[(i, j - 1)]}, {index[(i, j)]})')
+					id_word_map[index[(i, j)]] = word
+				for j in range(len(self._l[i])):
+					prolog.assertz(f'appear({index[(i, j)]}, {i})')
+			for word_id, word in id_word_map.items():
+				prolog.assertz(f"word({word_id}, '{word}')") #word is atom, not string (list of codes)
+				prolog.assertz(f'node_register({id(self)}, {word_id})') #register the word ID under a key (python ID of self)
+			#prolog.assertz('all_node([{}])'.format(', '.join([str(i) for i in id_word_map.keys()])))
+			self._big_anchor_state['graph'] = prolog
+			return prolog
+		elif self.graph_module is None:
+			print('Failed to draw graph!')
 			return
-		G = nx.DiGraph()
-		index = word_set.index()
-		for i in range(n):
-			G.add_node(index[(i, 0)], word = self._l[i][0])
-			for j, word in enumerate(self._l[i][1:], 1):
-				G.add_edge(index[(i, j - 1)], index[(i, j)])
-				G.nodes[index[(i, j)]]['word'] = word
-			for j, word in enumerate(self._l[i]):
-				if 'appearance' not in G.nodes[index[(i, j)]]:
-					G.nodes[index[(i, j)]]['appearance'] = []
-				G.nodes[index[(i, j)]]['appearance'].append(i)
-		self._big_anchor_state['graph'] = G
-		return G
-	def print_big_anchor(self):
+	def str_big_anchor(self):
 		"""
-		test function to represent the solution
+		function to return string represent the solution
 		"""
 		G = self.give_graph()
 		if G is None:
 			print('Fail to print big anchor.')
 			return
 		n = self._state.length
-		import networkx as nx
-		id_list = list(nx.algorithms.dag.topological_sort(G))
-		id_len = {i: len(G.nodes[i]['word']) for i in id_list}
-		str_list = [[' ' * id_len[i] for i in id_list] for _ in range(n)]
-		for i, word_id in enumerate(id_list):
-			node = G.nodes[word_id]
-			word = node['word']
-			for s in node['appearance']:
-				str_list[s][i] = word
-		print('\n'.join([' '.join(s) for s in str_list]))
+		if self.graph_module == 'networkx':
+			import networkx as nx
+			id_list = list(nx.algorithms.dag.topological_sort(G))
+			id_len = {i: len(G.nodes[i]['word']) for i in id_list}
+			str_list = [[' ' * id_len[i] for i in id_list] for _ in range(n)]
+			for i, word_id in enumerate(id_list):
+				node = G.nodes[word_id]
+				word = node['word']
+				for s in node['appearance']:
+					str_list[s][i] = word
+			return ('\n'.join([' '.join(s) for s in str_list]))
+		elif self.graph_module == 'pyswip':
+			query = next(G.query(f'all_node({id(self)}, L), topological_sort(L, Sol), grab_word(Sol, Words)'))
+			id_list, words = query['Sol'], [str(i) for i in query['Words']] #query['Words'] is a list of Atom object (this is a problem of pyswip), so call str() to make it string.
+			id_len = {i: len(word) for i, word in zip(id_list, words)}
+			str_list = [[' ' * id_len[i] for i in id_list] for _ in range(n)]
+			for i, (word_id, word) in enumerate(zip(id_list, words)):
+				for q in G.query(f'appear({word_id}, N)'):
+					str_list[q['N']][i] = word
+			return ('\n'.join([' '.join(s) for s in str_list]))
 	def final_result(self, weight, threshold):
 		G = self.give_graph()
 		if G is None:
 			print('Fail to get final result.')
 			return
-		import networkx as nx
-		n = self._state.length
-		str_len = len(G)
-		id_list = list(nx.algorithms.dag.topological_sort(G))
-		votes = map(lambda word_id: sum(weight[s] for s in G.nodes[word_id]['appearance']), id_list)
-		return (G.nodes[word_id]['word'] for vote, word_id in zip(votes, id_list) if vote >= threshold)
+		if self.graph_module == 'networkx':
+			import networkx as nx
+			id_list = list(nx.algorithms.dag.topological_sort(G))
+			votes = map(lambda word_id: sum(weight[s] for s in G.nodes[word_id]['appearance']), id_list)
+			return (G.nodes[word_id]['word'] for vote, word_id in zip(votes, id_list) if vote >= threshold)
+		elif self.graph_module == 'pyswip':
+			id_list = next(G.query(f'all_node({id(self)}, L), topological_sort(L, Sol)'))['Sol']
+			votes = map(lambda word_id: sum(weight[q['N']] for q in G.query(f'appear({word_id}, N)')), id_list)
+			return (next(G.query(f'word({word_id}, Word)'))['Word'] for vote, word_id in zip(votes, id_list) if vote >= threshold)
 	@classmethod
 	def compare(cls, l1: List[str], l2: List[str], param: Param):
 		anchors = cls._anchors(l1, l2)
-		return cls._compare_detail(l1, l2, param, anchors)
+		return cls._compare_detail(l1, l2, param, anchors, {})
 	@staticmethod
 	def _anchors(l1: List[str], l2: List[str]) -> List[AnchorType]:
 		"""
@@ -542,7 +592,7 @@ class StringAlign():
 			sol.extend([np.array(i) for i in product(i1, i2)])
 		return sol
 	@classmethod
-	def _compare_split(cls, l1: List[str], l2: List[str], param: Param, anchors: List[AnchorType], now_anchor: AnchorType) -> Tuple[ScoreType, List[AnchorType]]:
+	def _compare_split(cls, l1: List[str], l2: List[str], param: Param, anchors: List[AnchorType], memo: dict, now_anchor: AnchorType) -> Tuple[ScoreType, List[AnchorType]]:
 		"""
 		recursion function that always called by _compare_detail
 		deal with the step: considering an anchor being fixed, calculate the max possible point(score) it could be.
@@ -559,6 +609,7 @@ class StringAlign():
 				             output the score(point)
 				             ans :: return type of _compare_xxx
 			anchors
+			memo: not used in this function. just pass it into _compare_detail
 			now_anchor: meaning which anchor is fixed at the very step.
 		output: ans :: Ans(float, List[anchor]), as the highest similarity, anchors, same as _compare_detail
 		"""
@@ -568,13 +619,13 @@ class StringAlign():
 		right_child = (l1[(now_anchor[0] + 1):], l2[(now_anchor[1] + 1):])
 		left_anchor = [anchor for anchor in anchors if np.all(anchor < now_anchor)]
 		right_anchor = [anchor - now_anchor - 1 for anchor in anchors if np.all(anchor > now_anchor)]
-		left_ans = cls._compare_detail(*left_child, param, left_anchor)
-		right_ans = cls._compare_detail(*right_child, param, right_anchor)
+		left_ans = cls._compare_detail(*left_child, param, left_anchor, memo)
+		right_ans = cls._compare_detail(*right_child, param, right_anchor, memo)
 		sol_anchor = left_ans.anchors + [now_anchor] + [anchor + now_anchor + 1 for anchor in right_ans.anchors]
 		sol_simi = param.merge_point(left_child, right_child, left_ans, right_ans)
 		return cls.Ans(sol_simi, sol_anchor)
 	@classmethod
-	def _compare_detail(cls, l1: List[str], l2: List[str], param: Param, anchors: List[AnchorType]) -> Tuple[ScoreType, List[AnchorType]]:
+	def _compare_detail(cls, l1: List[str], l2: List[str], param: Param, anchors: List[AnchorType], memo: dict) -> Tuple[ScoreType, List[AnchorType]]:
 		"""
 		recursion function that called from outside (i.e., it is the entry of recursion) or by _compare_split
 		deal with the step: given all possible anchors, I want to know which anchor, when fixing it first, can get the highest point(score)
@@ -586,20 +637,24 @@ class StringAlign():
 			param: init_value is used here.
 				init_value: the starting point(score) meaning the lower bound of scoring algorithm
 			anchors
+			memo: a dict recording all results of having-appeared situations made of l1, l2, and anchors.
 		output: ans :: Ans(float, List[anchor]), as the highest similarity, anchors, same as _compare_split
 		"""
-		similarity, anchors_to_choose = param.init_value, []
-		if len(anchors) == 0:
-			simi, use_anchors = cls._compare_split(l1, l2, param, anchors, None) #call base case
-			if simi > similarity:
-				similarity, anchors_to_choose = simi, use_anchors
-		for anchor in anchors: #if executing above, the for-loop will not be executed
-			simi, use_anchors = cls._compare_split(l1, l2, param, anchors, np.array(anchor))
-			if simi > similarity:
-				similarity, anchors_to_choose = simi, use_anchors
-		return cls.Ans(similarity, anchors_to_choose)
+		hashable_sign = (tuple(l1), tuple(l2), tuple([tuple(i) for i in anchors]))
+		if hashable_sign not in memo:
+			similarity, anchors_to_choose = param.init_value, []
+			if len(anchors) == 0:
+				simi, use_anchors = cls._compare_split(l1, l2, param, anchors, memo, None) #call base case
+				if simi > similarity:
+					similarity, anchors_to_choose = simi, use_anchors
+			for anchor in anchors: #if executing above, the for-loop will not be executed
+				simi, use_anchors = cls._compare_split(l1, l2, param, anchors, memo, np.array(anchor))
+				if simi > similarity:
+					similarity, anchors_to_choose = simi, use_anchors
+			memo[hashable_sign] = cls.Ans(similarity, anchors_to_choose)
+		return memo[hashable_sign]
 
-def print_final_result(weight, threshold):
+def print_final_result(S, weight, threshold):
 	print("-------------------------------")
 	print(' '.join(S.final_result(weight, threshold)))
 	print("-------------------------------")
@@ -626,13 +681,13 @@ def to_final_result(API_results, weight, threshold):
 
 	S.evaluate(p)
 	#print(S)
-	x = S.big_anchor_concat_james()
-	#x = S.big_anchor_concat_heuristic(p)
+	#x = S.big_anchor_concat_james()
+	x = S.big_anchor_concat_heuristic(p)
 	x = x['word_set']
-	S.print_big_anchor()
+	print(S.str_big_anchor())
 	
 	print("")
-	print_final_result(weight, threshold)
+	print_final_result(S, weight, threshold)
 	
 	return 0
 
@@ -644,9 +699,9 @@ if __name__ == '__main__':
 	
 	S.evaluate(p)
 	#print(S)
-	x = S.big_anchor_concat_james()
-	#x = S.big_anchor_concat_heuristic(p)
+	#x = S.big_anchor_concat_james()
+	x = S.big_anchor_concat_heuristic(p)
 	x = x['word_set']
 	S.print_big_anchor()
 	
-	print_final_result(weight, threshold)
+	print_final_result(S, weight, threshold)
