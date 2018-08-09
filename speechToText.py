@@ -4,7 +4,6 @@ import wave
 import time
 import globalvar as gl
 import API_keys
-import findAllSticks
 import os
 import weight
 
