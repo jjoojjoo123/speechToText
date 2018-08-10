@@ -669,7 +669,25 @@ def give_param(way):
 		p.init_value = -np.inf
 		p.base_point = lambda l1, l2: -(len(l1) + len(l2))
 		p.merge_point = lambda l, r, a1, a2: a1.similarity + a2.similarity + 2
-    return p
+	return p
+
+def API_to_final_result(API_results, weight, threshold):
+	S = StringAlign()
+	S += API_results
+	p = give_param('james')
+
+	S.evaluate(p)
+	print(S)
+	#x = S.big_anchor_concat_james()
+	x = S.big_anchor_concat_heuristic(p)
+	x = x['word_set']
+	print(S.str_big_anchor())
+	
+	print("")
+	result = S.final_result(weight, threshold)
+	print(list(result))
+	
+	return 0
 
 if __name__ == '__main__':
 	S = StringAlign()

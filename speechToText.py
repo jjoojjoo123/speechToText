@@ -1,4 +1,5 @@
 from pynput.keyboard import Key, KeyCode, Listener
+import string_align
 import pyaudio
 import wave
 import time
@@ -104,7 +105,7 @@ class RecordingFile(Listener):
         self.results = self.recognize()
         self.write_text(self.results)
         if self.no_exception == True:
-            findAllSticks.to_final_result(self.results, weight, threshold)
+            string_align.API_to_final_result(self.results, weight, threshold)
         else:
             print("Your voice is not clear enough, please try again!")
         print("Press ESC to start/stop! Or press 'Q' to exit!")
@@ -200,7 +201,7 @@ class RecordingFile(Listener):
 #                sphinx_result ="Exception: sphinx cannot recognize!" 
 #                print(sphinx_result)
             print("-------------------------------")
-            results = [google_result, ibm_result, wit_result, houndify_result]
+            results = [google_result, ibm_result, wit_result]
             return results
 
     def write_text(self, results):
