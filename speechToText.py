@@ -4,7 +4,7 @@ import wave
 import time
 import globalvar as gl
 import API_keys
-import findAllSticks
+import final_result
 import os
 import weight
 
@@ -105,7 +105,7 @@ class RecordingFile(Listener):
         self.results = self.recognize()
         self.write_text(self.results)
         if self.no_exception == True:
-            findAllSticks.to_final_result(self.results, weight, threshold)
+            final_result.to_final_result(self.results, weight, threshold, way = 'james', print_mode = True)
         else:
             print("Your voice is not clear enough, please try again!")
         print("Press ESC to start/stop! Or press 'Q' to exit!")

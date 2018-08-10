@@ -2,8 +2,9 @@ import wave
 import os
 from flask import Flask, render_template, request, jsonify
 import web_recognize
+import final_result
 import globalvar as gl
-import weight
+import weight #deprecated
 from decimal import Decimal
 
 #weight = gl.get_value("weight")
@@ -31,18 +32,18 @@ def recog():
 	fname = request.form.get('fname')
 	weight = [Decimal(i) for i in request.form.get('weight').split(',')]
 	threshold = Decimal(request.form.get('threshold'))
+	way = request.form.get('way')
 	results, no_exception, exceed_quota = web_recognize.recognize('./audios/' + fname)
 	if no_exception == True:
-		alignment, recommendation = web_recognize.to_final_result(results, weight, threshold)
+		alignment, recommendation = final_result.to_final_result(results, weight, threshold, way = way)
 		dic = {"results":results, "no_exception":no_exception, "exceed_quota":exceed_quota, "alignment":alignment, "recommendation":recommendation}
 	else:
 		if exceed_quota == True:
 			del results[-1]
-			alignment, recommendation = web_recognize.to_final_result(results, weight, threshold)
+			alignment, recommendation = final_result.to_final_result(results, weight, threshold, way = way)
 			dic = {"results":results, "no_exception":no_exception, "exceed_quota":exceed_quota, "alignment":alignment, "recommendation":recommendation}
 		else:
 			dic = {"no_exception":no_exception}
-
 	return jsonify(dic)
 
 @app.route('/deleteAudios', methods=['POST'])

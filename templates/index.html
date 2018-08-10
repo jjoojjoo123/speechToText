@@ -4,6 +4,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<title>speech to text</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
   <style type='text/css'>
     ul { list-style: none; }
     #recordingslist audio { display: block; margin-bottom: 10px; }
@@ -36,6 +37,9 @@
   <h2>Tuning</h2>
   <p id="weight">API weight: </p>
   <p>Threshold: <input type="number" id="threshold" value="2" style="width: 50px" required></p>
+  <p>Scoring Strategy: 
+    <select id="ways"></select>
+  </p>
 
   <h2>Log</h2>
   <pre id="log"></pre>
@@ -51,6 +55,15 @@
     node.setAttribute("style", "width:50px");
     node.required = true;
     weight_tuning.appendChild(node);
+  }
+
+  var ways = ['james', 'wayne'];
+  var ways_node = document.getElementById("ways");
+  for(var i = 0;i < ways.length;i++){
+    var node = document.createElement("option");
+    node.setAttribute("value", ways[i]);
+    node.appendChild(document.createTextNode(ways[i]));
+    ways_node.appendChild(node);
   }
   </script>
   <script>
@@ -153,6 +166,7 @@
       }
       fd.append('weight', weight);
       fd.append('threshold', document.getElementById("threshold").value || 1);
+      fd.append('way', document.getElementById("ways").value);
       $.ajax({
           type: 'POST',
           url: '/recog',

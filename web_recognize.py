@@ -1,6 +1,5 @@
 import globalvar as gl
 import API_keys
-from string_align import StringAlign, give_param
 
 ibm_username = gl.get_value("ibm_username")
 ibm_password = gl.get_value("ibm_password")
@@ -12,7 +11,12 @@ store_result = {}
 
 def recognize(AudioFile):
 	if AudioFile in store_result:
-		return store_result[AudioFile]
+		result = store_result[AudioFile]
+		print(result)
+		if result[1] or result[2]: #no_exception or exceed_quota
+			return store_result[AudioFile]
+		else:
+			pass #re-recognize
 	audio_to_trans = AudioFile
 	no_exception = True
 	exceed_quota = False
@@ -83,7 +87,8 @@ def recognize(AudioFile):
 		except:
 			if no_exception == True:
 				exceed_quota = True
-			no_exception = False
+			else:
+				no_exception = False #not needed
 			houndify_result = "Exception: houndify cannot recognize!"
 			#print(houndify_result)
 
@@ -91,18 +96,3 @@ def recognize(AudioFile):
 		results = [google_result, ibm_result, wit_result, houndify_result]
 		store_result[AudioFile] = results, no_exception, exceed_quota
 		return results, no_exception, exceed_quota
-
-
-def to_final_result(API_results, weight, threshold):
-	S = StringAlign()
-	S += API_results
-
-	p = give_param('james')
-	S.evaluate(p)
-	#x = S.big_anchor_concat_james()
-	x = S.big_anchor_concat_heuristic(p)
-	x = x['word_set']
-	alignment = S.str_big_anchor()
-	final_result = ' '.join(S.final_result(weight, threshold))
-	
-	return alignment, final_result
