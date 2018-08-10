@@ -177,18 +177,21 @@
           results_text = document.getElementById("results")
           recommendation_text = document.getElementById("recommendation")
           if (data["no_exception"]) {
-            if (!data["exceed_quota"]) {
-              results_text.innerHTML = "google: " + data["results"][0] + '\n' + "ibm: " + data["results"][1] + '\n' + "wit: " + data["results"][2] + '\n' + "hundify: " + data["results"][3]
-            }
-            else {
-              results_text.innerHTML = "google: " + data["results"][0] + '\n' + "ibm: " + data["results"][1] + '\n' + "wit: " + data["results"][2] + '\n' + "houndify quota exceeded!"
-            }
+            results_text.innerHTML = "google: " + data["results"][0] + '\n' + "ibm: " + data["results"][1] + '\n' + "wit: " + data["results"][2] + '\n' + "hundify: " + data["results"][3]
             results_text.innerHTML += '<hr>'
             results_text.innerHTML += '\n' + data["alignment"]
             recommendation_text.value = recommendation_text.value + data["recommendation"] + '\n'
           }
           else {
+            if (data["exceed_quota"]) {
+              results_text.innerHTML = "google: " + data["results"][0] + '\n' + "ibm: " + data["results"][1] + '\n' + "wit: " + data["results"][2] + '\n' + "houndify quota exceeded!"
+              results_text.innerHTML += '<hr>'
+              results_text.innerHTML += '\n' + data["alignment"]
+              recommendation_text.value = recommendation_text.value + data["recommendation"] + '\n'
+            }
+            else {
             results_text.innerHTML = "Your voice is not clear enough, please try again!"
+            }
           }
           
           __log("Complete!")

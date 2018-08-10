@@ -1,4 +1,5 @@
 from pynput.keyboard import Key, KeyCode, Listener
+import string_align
 import pyaudio
 import wave
 import time
@@ -201,7 +202,7 @@ class RecordingFile(Listener):
 #                sphinx_result ="Exception: sphinx cannot recognize!" 
 #                print(sphinx_result)
             print("-------------------------------")
-            results = [google_result, ibm_result, wit_result, houndify_result]
+            results = [google_result, ibm_result, wit_result]
             return results
 
     def write_text(self, results):
