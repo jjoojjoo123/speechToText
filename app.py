@@ -39,7 +39,7 @@ def recog():
 		dic = {"results":results, "no_exception":no_exception, "exceed_quota":exceed_quota, "alignment":alignment, "recommendation":recommendation}
 	else:
 		if exceed_quota == True:
-			del results[-1]
+			results = results[:-1]
 			alignment, recommendation = final_result.to_final_result(results, weight, threshold, way = way)
 			dic = {"results":results, "no_exception":no_exception, "exceed_quota":exceed_quota, "alignment":alignment, "recommendation":recommendation}
 		else:
