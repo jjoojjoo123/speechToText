@@ -39,7 +39,7 @@ def recog():
             dic = {"results":results, "no_exception":no_exception, "exceed_quota":exceed_quota, "alignment":alignment, "recommendation":recommendation}
         else:
             dic = {"no_exception":no_exception}
-
+    
     return jsonify(dic)
 
 @app.route('/deleteAudios', methods=['POST'])
