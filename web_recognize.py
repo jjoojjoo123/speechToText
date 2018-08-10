@@ -12,7 +12,6 @@ store_result = {}
 def recognize(AudioFile):
 	if AudioFile in store_result:
 		result = store_result[AudioFile]
-		print(result)
 		if result[1] or result[2]: #no_exception or exceed_quota
 			return store_result[AudioFile]
 		else:
@@ -87,8 +86,7 @@ def recognize(AudioFile):
 		except:
 			if no_exception == True:
 				exceed_quota = True
-			else:
-				no_exception = False #not needed
+			no_exception = False
 			houndify_result = "Exception: houndify cannot recognize!"
 			#print(houndify_result)
 
