@@ -40,6 +40,7 @@
   <p>Scoring Strategy: 
     <select id="ways"></select>
   </p>
+  <p>Stemming: <input type="checkbox" id="stem"></p>
 
   <h2>Log</h2>
   <pre id="log"></pre>
@@ -166,6 +167,7 @@
       }
       fd.append('weight', weight);
       fd.append('threshold', document.getElementById("threshold").value || 1);
+      fd.append('use_stem', document.getElementById("stem").checked ? "T" : "F");
       fd.append('way', document.getElementById("ways").value);
       $.ajax({
           type: 'POST',

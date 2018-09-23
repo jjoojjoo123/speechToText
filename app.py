@@ -32,10 +32,11 @@ def recog():
 	fname = request.form.get('fname')
 	weight = [Decimal(i) for i in request.form.get('weight').split(',')]
 	threshold = Decimal(request.form.get('threshold'))
+	use_stem = (request.form.get('use_stem') == 'T')
 	way = request.form.get('way')
 	results, no_exception, exceed_quota = web_recognize.recognize('./audios/' + fname)
 	if no_exception == True:
-		alignment, recommendation = final_result.to_final_result(results, weight, threshold, way = way)
+		alignment, recommendation = final_result.to_final_result(results, weight, threshold, way = way, use_stem = use_stem)
 		dic = {"results":results, "no_exception":no_exception, "exceed_quota":exceed_quota, "alignment":alignment, "recommendation":recommendation}
 	else:
 		if exceed_quota == True:
