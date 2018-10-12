@@ -1,9 +1,15 @@
 from string_align import StringAlign, give_param
 
-def to_final_result(API_results, weight, threshold, *, way = 'james', print_mode = False):
+def to_final_result(API_results, weight, threshold, *, way = 'james', print_mode = False, **kwargs):
 	S = StringAlign()
 	S += API_results
 	p = give_param(way)
+
+	for k, n in kwargs.items():
+		try:
+			setattr(p, k, n)
+		except:
+			pass
 
 	S.evaluate(p)
 	#x = S.big_anchor_concat_james()
