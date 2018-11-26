@@ -17,6 +17,10 @@ app = Flask(__name__)
 def index():
 	return render_template('index.html')
 
+@app.route('/reasoner_page',)
+def reasoner_page():
+	return render_template('reasoner_page.html')
+
 @app.route('/upload', methods=['POST'])
 def upload():
 	fname = request.form.get('fname')
@@ -32,10 +36,11 @@ def recog():
 	fname = request.form.get('fname')
 	weight = [Decimal(i) for i in request.form.get('weight').split(',')]
 	threshold = Decimal(request.form.get('threshold'))
+	use_stem = (request.form.get('use_stem') == 'T')
 	way = request.form.get('way')
 	results, no_exception, exceed_quota = web_recognize.recognize('./audios/' + fname)
 	if no_exception == True:
-		alignment, recommendation = final_result.to_final_result(results, weight, threshold, way = way)
+		alignment, recommendation = final_result.to_final_result(results, weight, threshold, way = way, use_stem = use_stem)
 		dic = {"results":results, "no_exception":no_exception, "exceed_quota":exceed_quota, "alignment":alignment, "recommendation":recommendation}
 	else:
 		if exceed_quota == True:
@@ -74,6 +79,15 @@ def make_wav_file(fname, decode_base64str):
 	wavefile.setframerate(rate)
 	wavefile.writeframes(decode_base64str)
 
+@app.route('/saveText', methods=['POST'])
+def saveText():
+	fname = request.form.get('fname')
+	text = request.form.get('text')
+	textFile = open('./texts/' + fname, 'w')
+	textFile.write(text)
+	textFile.close()
+
+	return ""
 
 if __name__ == "__main__":
 	app.run()
