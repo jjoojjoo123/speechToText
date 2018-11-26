@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Reasoner</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
+</head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+	window.jQuery || document.write('<script src="{{
+  url_for('static', filename='jquery-3.3.1.min.js') }}">\x3C/script>')
+</script>
+
+<body>
+	<h2>Reasoner</h2>
+  	<textarea id="input_text" style="width:800px;height:100px;"></textarea>
+  	<button id="upload_text" onclick="uploadText();">start reason</button>
+
+	<script>
+	function uploadText() {
+		var text = document.getElementById("input_text").value
+
+	    if (text != '') {
+	      	var filename = (new Date().toISOString() + '.txt').replace(/:/g, "_");
+	      	var fd = new FormData();
+	      	fd.append('fname', filename);
+	      	fd.append('text', text);
+	      	$.ajax({
+	          type: 'POST',
+	          url: '/saveText',
+	          data: fd,
+	          processData: false,
+	          contentType: false
+      		}).done(function(data) {
+      			console.log("123");
+      		})
+	      
+    	}
+	}
+
+	</script>
+
+</body>
+</html>
