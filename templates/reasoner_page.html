@@ -14,16 +14,25 @@
 </script>
 
 <body>
+	<button id="go_back_index_page" onclick="window.location.href='{{ url_for("index") }}'">Back</button>
+
 	<h2>Reasoner</h2>
   	<textarea id="input_text" style="width:800px;height:100px;"></textarea>
   	<button id="upload_text" onclick="uploadText();">start reason</button>
 
+  	<h2>Log</h2>
+  	<pre id="log"></pre>
+
 	<script>
+	var fnames = [];
+
 	function uploadText() {
 		var text = document.getElementById("input_text").value
 
 	    if (text != '') {
 	      	var filename = (new Date().toISOString() + '.txt').replace(/:/g, "_");
+	      	fnames.push(filename);
+
 	      	var fd = new FormData();
 	      	fd.append('fname', filename);
 	      	fd.append('text', text);
@@ -34,11 +43,36 @@
 	          processData: false,
 	          contentType: false
       		}).done(function(data) {
-      			console.log("123");
-      		})
+      			__log('Upload to server successfully.');
+      		}).fail(function(jqXHR, textStatus, error) {
+              __log('Upload to server failed')
+          	});
 	      
     	}
 	}
+
+	function __log(e, data) {
+    	log.innerHTML += "\n" + e + " " + (data || '');
+  	}
+
+  	window.onbeforeunload = function() {
+    	var fd = new FormData();
+    	for (var i = fnames.length - 1; i >= 0; i--) {
+      	fd.append('fnames', fnames[i]);
+    	}
+    
+    	$.ajax({
+        	type: 'POST',
+        	url: '/deleteTexts',
+        	data: fd,
+        	processData: false,
+        	contentType: false
+    	}).done(function(data) {
+        
+    	}).fail(function(jqXHR, textStatus, error) {
+        
+    	});
+  	}
 
 	</script>
 
