@@ -13,14 +13,15 @@ AnchorType = np.ndarray
 ScoreType = Any #float, int, etc. #Ord Scoretypr #C++ concept: LessThanComparable
 
 class Param():
-	__slots__ = ('_init_value', '_base_point', '_merge_point', '_base_confidence', '_score_map', '_use_stem')
-	def __init__(self, *, init_value = None, base_point = None, merge_point = None, base_confidence = 1, score_map = None, use_stem = False):
+	__slots__ = ('_init_value', '_base_point', '_merge_point', '_base_confidence', '_score_map', '_use_stem', '_lowercast')
+	def __init__(self, *, init_value = None, base_point = None, merge_point = None, base_confidence = 1, score_map = None, use_stem = False, lowercast = False):
 		self._init_value = init_value
 		self._base_point = base_point
 		self._merge_point = merge_point
 		self._base_confidence = base_confidence
 		self._score_map = score_map
 		self._use_stem = use_stem
+		self._lowercast = lowercast
 	@property
 	def init_value(self):
 		return self._init_value
@@ -59,6 +60,12 @@ class Param():
 		return self._use_stem
 	@use_stem.setter
 	def use_stem(self, n):
+		self._use_stem = n
+	@property
+	def lowercast(self):
+		return self._lowercast
+	@lowercast.setter
+	def lowercast(self, n):
 		self._use_stem = n
 
 class StringAlign():
@@ -144,6 +151,8 @@ class StringAlign():
 		state = self.__class__.State(n, dict())
 		if param.use_stem:
 			l = [[stemmer.stem(word, 0, len(word) - 1) for word in s] for s in l]
+		else param.lowercast:
+			l = [[word.lower() for word in s] for s in l]
 		for i, j in combinations(range(n), 2):
 			get = self.__class__.compare(l[i], l[j], param)
 			#get = get[0], list(get[1])
@@ -194,6 +203,8 @@ class StringAlign():
 		l = self._l
 		if param.use_stem:
 			l = [[stemmer.stem(word, 0, len(word) - 1) for word in s] for s in l]
+		else param.lowercast:
+			l = [[word.lower() for word in s] for s in l]
 		max_score_top_to_bottom, best_sticks_top_to_bottom = self.__class__._big_anchor_concat_james_helper([l[i] for i in best_comb] + [l[i] for i in another_comb], sticks)
 		max_score_bottom_to_top, best_sticks_bottom_to_top = self.__class__._big_anchor_concat_james_helper([l[i] for i in another_comb] + [l[i] for i in best_comb], after_change_sticks)
 		best_sticks_bottom_to_top = [[{(k+2)%4: i for k, i in d.items()} for d in best_sticks_bottom_to_top[1]], [{(k+2)%4: i for k, i in d.items()} for d in best_sticks_bottom_to_top[0]]]

@@ -31,15 +31,17 @@
 	var fnames = [];
 
 	function uploadText() {
-		var text = document.getElementById("input_text").value
+		var story = document.getElementById("story").value;
+    var query = document.getElementById("query").value;
 
 	    if (text != '') {
-	      	var filename = (new Date().toISOString() + '.txt').replace(/:/g, "_");
+	      	var filename = (new Date().toISOString()).replace(/:/g, "_");
 	      	fnames.push(filename);
 
 	      	var fd = new FormData();
 	      	fd.append('fname', filename);
-	      	fd.append('text', text);
+	      	fd.append('story', story);
+          fd.append('query', query);
 	      	$.ajax({
 	          type: 'POST',
 	          url: '/saveText',
