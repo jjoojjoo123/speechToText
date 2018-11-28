@@ -9,19 +9,23 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script>
-	window.jQuery || document.write('<script src="{{
-  url_for('static', filename='jquery-3.3.1.min.js') }}">\x3C/script>')
+	window.jQuery || document.write('<script src="{{url_for('static', filename='jquery-3.3.1.min.js') }}">\x3C/script>')
 </script>
 
 <body>
 	<button id="go_back_index_page" onclick="window.location.href='{{ url_for("index") }}'">Back</button>
 
-	<h2>Reasoner</h2>
-  	<textarea id="input_text" style="width:800px;height:100px;"></textarea>
-  	<button id="upload_text" onclick="uploadText();">start reason</button>
+	<h2>Story</h2>
+  <textarea id="story" style="width:800px;height:100px;"></textarea>
+  <h2>Query</h2>
+  <textarea id="query" style="width:800px;"></textarea>
+  <button id="upload_text" onclick="uploadText();">start reason</button>
 
-  	<h2>Log</h2>
-  	<pre id="log"></pre>
+  <h2>Output</h2>
+  <pre id="output"></pre>
+
+  <h2>Log</h2>
+  <pre id="log"></pre>
 
 	<script>
 	var fnames = [];
