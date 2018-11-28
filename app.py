@@ -17,6 +17,10 @@ app = Flask(__name__)
 def index():
 	return render_template('index.html')
 
+@app.route('/reasoner_page.html')
+def reasoner_page():
+	return render_template('reasoner_page.html')
+
 @app.route('/upload', methods=['POST'])
 def upload():
 	fname = request.form.get('fname')
@@ -75,6 +79,22 @@ def make_wav_file(fname, decode_base64str):
 	wavefile.setframerate(rate)
 	wavefile.writeframes(decode_base64str)
 
+@app.route('/saveText', methods=['POST'])
+def saveText():
+	fname = request.form.get('fname')
+	text = request.form.get('text')
+	textFile = open('./texts/' + fname, 'w')
+	textFile.write(text)
+	textFile.close()
+
+	return ""
+
+@app.route('/deleteTexts', methods=['POST'])
+def deleteTexts():
+	fnames = request.form.getlist('fnames')
+	for fname in fnames:
+		os.remove('./texts/' + fname)
+	return ""
 
 if __name__ == "__main__":
 	app.run()
