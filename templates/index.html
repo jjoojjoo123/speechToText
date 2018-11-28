@@ -17,10 +17,11 @@
 
 <body>
 
+  <button id="go_to_reasoner_page" onclick="window.location.href='{{ url_for("reasoner_page") }}'">go to reasoner page</button>
+
   <h1>Speech to Text (Using Recorder.js)</h1>
 
-  <p>Make sure you are using a recent version of Google Chrome.</p>
-  <p>Also before you enable microphone input either plug in headphones or turn the volume down if you want to avoid ear splitting feedback!</p>
+  <p>Before you enable microphone input either plug in headphones or turn the volume down if you want to avoid ear splitting feedback!</p>
 
   <button id="record" onclick="startRecording(this);">record</button>
   <button id="stop" onclick="stopRecording(this);" disabled>stop</button>
@@ -33,6 +34,7 @@
   
   <h2>Recommendation</h2>
   <textarea id="recommendation" style="width:800px;height:100px;"></textarea>
+  <button id="download" onclick="downloadTextFile();">download text file</button>
 
   <h2>Tuning</h2>
   <p id="weight">API weight: </p>
@@ -204,6 +206,21 @@
     li.appendChild(recBtn);
 
     recordingslist.appendChild(li);
+  }
+
+  function downloadTextFile() {
+    var text = document.getElementById("recommendation").value
+
+    if (text != '') {
+      var a = document.createElement('a');
+      var blob = new Blob([text], {type: "text/plain"})
+      var url = window.URL.createObjectURL(blob);
+      var filename = (new Date().toISOString() + '.txt').replace(/:/g, "_");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
   }
 
   window.onload = function init() {
