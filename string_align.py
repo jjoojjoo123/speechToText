@@ -2,21 +2,25 @@ import re
 import numpy as np
 from itertools import combinations, product, chain
 from typing import List, Tuple, Any
-from collections import namedtuple, deque
+from collections import namedtuple, deque, defaultdict
 from disjoint_set import disjoint_set
 from copy import deepcopy
+from Porter_stemmer import PorterStemmer
+
+stemmer = PorterStemmer()
 
 AnchorType = np.ndarray
 ScoreType = Any #float, int, etc. #Ord Scoretypr #C++ concept: LessThanComparable
 
 class Param():
-	__slots__ = ('_init_value', '_base_point', '_merge_point', '_base_confidence', '_score_map')
-	def __init__(self, init_value = None, base_point = None, merge_point = None, base_confidence = 1, score_map = None):
+	__slots__ = ('_init_value', '_base_point', '_merge_point', '_base_confidence', '_score_map', '_use_stem')
+	def __init__(self, *, init_value = None, base_point = None, merge_point = None, base_confidence = 1, score_map = None, use_stem = False):
 		self._init_value = init_value
 		self._base_point = base_point
 		self._merge_point = merge_point
 		self._base_confidence = base_confidence
 		self._score_map = score_map
+		self._use_stem = use_stem
 	@property
 	def init_value(self):
 		return self._init_value
@@ -50,6 +54,12 @@ class Param():
 	def score_map(self, f):
 		#f :: List[float] -> State[int, Dict[(int, int): Ans(float, List[anchor])]] -> Dict[(int, int): float]
 		self._score_map = f
+	@property
+	def use_stem(self):
+		return self._use_stem
+	@use_stem.setter
+	def use_stem(self, n):
+		self._use_stem = n
 
 class StringAlign():
 	c1, c2, c3 = re.compile(R"([^\w\s'])"), re.compile(R"\s+"), re.compile(R"^\s|\s$")
@@ -132,6 +142,8 @@ class StringAlign():
 		l = self._l
 		n = len(l)
 		state = self.__class__.State(n, dict())
+		if param.use_stem:
+			l = [[stemmer.stem(word, 0, len(word) - 1) for word in s] for s in l]
 		for i, j in combinations(range(n), 2):
 			get = self.__class__.compare(l[i], l[j], param)
 			#get = get[0], list(get[1])
@@ -165,7 +177,7 @@ class StringAlign():
 		#this function should return one that contains word_set
 		#sets = list(word_set.sets())
 		#print(sentences_set) #all the sentences should become same
-	def big_anchor_concat_james(self, *args, **kwargs):
+	def big_anchor_concat_james(self, param: Param, *args, **kwargs):
 		if self._state is None: #exception-like condition, maybe NoStateException
 			print('No state is ready!')
 			return
@@ -179,8 +191,11 @@ class StringAlign():
 		sticks = [[{0: i, 1: j} for i, j in state.Dict[best_comb].anchors], [{2: i, 3: j} for i, j in state.Dict[another_comb].anchors]]
 		after_change_sticks = [[{0: i, 1: j} for i, j in state.Dict[another_comb].anchors], [{2: i, 3: j} for i, j in state.Dict[best_comb].anchors]]
 		#word_set = disjoint_set.from_iterable(chain.from_iterable([(i, j) for j in range(len(self._l[i]))] for i in range(4)))
-		max_score_top_to_bottom, best_sticks_top_to_bottom = self.__class__._big_anchor_concat_james_helper([self._l[i] for i in best_comb] + [self._l[i] for i in another_comb], sticks)
-		max_score_bottom_to_top, best_sticks_bottom_to_top = self.__class__._big_anchor_concat_james_helper([self._l[i] for i in another_comb] + [self._l[i] for i in best_comb], after_change_sticks)
+		l = self._l
+		if param.use_stem:
+			l = [[stemmer.stem(word, 0, len(word) - 1) for word in s] for s in l]
+		max_score_top_to_bottom, best_sticks_top_to_bottom = self.__class__._big_anchor_concat_james_helper([l[i] for i in best_comb] + [l[i] for i in another_comb], sticks)
+		max_score_bottom_to_top, best_sticks_bottom_to_top = self.__class__._big_anchor_concat_james_helper([l[i] for i in another_comb] + [l[i] for i in best_comb], after_change_sticks)
 		best_sticks_bottom_to_top = [[{(k+2)%4: i for k, i in d.items()} for d in best_sticks_bottom_to_top[1]], [{(k+2)%4: i for k, i in d.items()} for d in best_sticks_bottom_to_top[0]]]
 		best_sticks = [best_sticks_top_to_bottom[0] , best_sticks_bottom_to_top[1]]
 		for i in range(0, len(best_sticks[0])):
@@ -261,7 +276,7 @@ class StringAlign():
 			
 		best_sticks = list(filter(lambda a: len(a) > 0, best_sticks))
 		no_cross_sticks += best_sticks #List[Dict]
-		word_set = disjoint_set.from_iterable(chain.from_iterable([(i, j) for j in range(len(self._l[i]))] for i in range(4)))
+		word_set = disjoint_set.from_iterable(chain.from_iterable([(i, j) for j in range(len(l[i]))] for i in range(4)))
 		for d in no_cross_sticks:
 			if len(d) <= 1:
 				continue
@@ -494,15 +509,23 @@ class StringAlign():
 			import networkx as nx
 			G = nx.DiGraph()
 			index = word_set.index()
+			origin_word_mapping = defaultdict(list) #adapted for word stemming
 			for i in range(n):
-				G.add_node(index[(i, 0)], word = self._l[i][0])
+				G.add_node(index[(i, 0)])
+				origin_word_mapping[index[(i, 0)]].append(self._l[i][0])
 				for j, word in enumerate(self._l[i][1:], 1):
 					G.add_edge(index[(i, j - 1)], index[(i, j)])
-					G.nodes[index[(i, j)]]['word'] = word
+					origin_word_mapping[index[(i, j)]].append(self._l[i][j])
 				for j, word in enumerate(self._l[i]):
 					if 'appearance' not in G.nodes[index[(i, j)]]:
 						G.nodes[index[(i, j)]]['appearance'] = []
 					G.nodes[index[(i, j)]]['appearance'].append(i)
+			for i, l in origin_word_mapping.items():
+				"""
+				choose the word to represent
+				only 1 mode now: choose the first appearence
+				"""
+				G.nodes[i]['word'] = l[0]
 			self._big_anchor_state['graph'] = G
 			return G
 		elif self.graph_module == 'pyswip':
@@ -512,15 +535,21 @@ class StringAlign():
 			#clear the previos graph which is created in this object
 			deque(prolog.query(f'clear_register({id(self)})'), maxlen = 0)
 			index = word_set.index()
-			id_word_map = {} #prevent overlapping
+			id_word_map = defaultdict(list) #prevent overlapping, adapted for word stemming
 			for i in range(n):
-				id_word_map[index[(i, 0)]] = self._l[i][0]
+				id_word_map[index[(i, 0)]].append(self._l[i][0])
 				for j, word in enumerate(self._l[i][1:], 1):
 					prolog.assertz(f'edge({index[(i, j - 1)]}, {index[(i, j)]})')
-					id_word_map[index[(i, j)]] = word
+					id_word_map[index[(i, j)]].append(word)
 				for j in range(len(self._l[i])):
 					prolog.assertz(f'appear({index[(i, j)]}, {i})')
-			for word_id, word in id_word_map.items():
+			for word_id, words in id_word_map.items():
+				"""
+				choose the word to represent
+				only 1 mode now: choose the first appearence
+				"""
+				word = words[0]
+				
 				prolog.assertz(f"word({word_id}, '{word}')") #word is atom, not string (list of codes)
 				prolog.assertz(f'node_register({id(self)}, {word_id})') #register the word ID under a key (python ID of self)
 			#prolog.assertz('all_node([{}])'.format(', '.join([str(i) for i in id_word_map.keys()])))
