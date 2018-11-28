@@ -69,6 +69,10 @@ def safe_base64_decode(base64str):
 		return decode_base64str
 
 def make_wav_file(fname, decode_base64str):
+	dirName = 'audios'
+	if not os.path.exists(dirName):
+		os.mkdir(dirName)
+
 	channels = 2
 	sampwidth = 2
 	rate = 44100   
@@ -81,6 +85,10 @@ def make_wav_file(fname, decode_base64str):
 
 @app.route('/saveText', methods=['POST'])
 def saveText():
+	dirName = 'texts'
+	if not os.path.exists(dirName):
+		os.mkdir(dirName)
+
 	fname = request.form.get('fname')
 	text = request.form.get('text')
 	textFile = open('./texts/' + fname, 'w')
