@@ -8,6 +8,8 @@ import weight #deprecated
 import use_reasoner
 from decimal import Decimal
 
+os.chdir(os.path.dirname(__file__))
+
 #weight = gl.get_value("weight")
 #threshold = gl.get_value("threshold")
 
@@ -92,9 +94,12 @@ def saveText():
 		os.mkdir(dirName)
 
 	fname = request.form.get('fname')
-	text = request.form.get('text')
-	with open(f'./{dirname}/{fname}', 'w') as textFile:
-		textFile.write(text)
+	story = request.form.get('story')
+	query = request.form.get('query')
+	with open(f'./{dirname}/{fname}_story', 'w') as textFile:
+		textFile.write(story)
+	with open(f'./{dirname}/{fname}_query', 'w') as textFile:
+		textFile.write(query)
 
 	return ""
 

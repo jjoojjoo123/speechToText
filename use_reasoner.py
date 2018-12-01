@@ -1,2 +1,36 @@
 import os
 import subprocess
+import platform
+
+URI = 'http://attempto.ifi.uzh.ch/ontologies/owlswrl/test'
+reasoner = 'HermiT.jar'
+ape = 'ape'
+owl_to_ace = 'owl_to_ace'
+demo_class = 'Demo'
+
+ape_command = lambda filename, uri: [ape, '-file', filename, '-solo', 'owlxml', '-uri', uri]
+owl_to_ace_command = lambda filename: [owl_to_ace, '-xml', filename]
+
+plat = platform.system()
+
+if not os.exists(reasoner):
+	print("Cannot find reasoner.")
+
+if not os.exists(f'{ape}{'.exe' if plat == 'Windows' else ''}'):
+	print("Cannot find ape")
+
+if not os.exists(f'{owl_to_ace}{'.exe' if plat == 'Windows' else ''}'):
+	print("Cannot find owl_to_ace")
+
+if not os.exists(f'{demo_class}.class'):
+	subprocess.run(['javac', '-cp', reasoner, f'{demo_class}.java'])
+
+def run(storypath, querypath):
+	with open(f'{storypath}.owl', 'wb') as file:
+		s = subprocess.run(ape_command(filename = storypath, uri = f'{URI}_story'), capture_output = True)
+		file.write(s.stdout)
+	with open(f'{querypath}.owl', 'wb') as file:
+		q = subprocess.run(ape_command(filename = querypath, uri = f'{URI}_query'), capture_output = True)
+		file.write(q.stdout)
+	result = subprocess.run(['java', '-cp', f'.{';' if plat == 'Windows' else ':'}{reasoner}', demo_class, 'e', os.path.abspath(f'{storypath}.owl'), os.path.abspath(f'{querypath}.owl')], capture_output = True)
+	print(result.stdout)
