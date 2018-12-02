@@ -34,7 +34,7 @@
 		var story = document.getElementById("story").value;
     var query = document.getElementById("query").value;
 
-	    if (text != '') {
+	    if (story != '' && query != '') {
 	      	var filename = (new Date().toISOString()).replace(/:/g, "_");
 	      	fnames.push(filename);
 
@@ -49,6 +49,8 @@
 	          processData: false,
 	          contentType: false
       		}).done(function(data) {
+            results_text = document.getElementById("output");
+            results_text.innerHTML = data['result'];
       			__log('Upload to server successfully.');
       		}).fail(function(jqXHR, textStatus, error) {
               __log('Upload to server failed')

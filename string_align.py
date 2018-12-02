@@ -151,7 +151,7 @@ class StringAlign():
 		state = self.__class__.State(n, dict())
 		if param.use_stem:
 			l = [[stemmer.stem(word, 0, len(word) - 1) for word in s] for s in l]
-		else param.lowercast:
+		elif param.lowercast:
 			l = [[word.lower() for word in s] for s in l]
 		for i, j in combinations(range(n), 2):
 			get = self.__class__.compare(l[i], l[j], param)
@@ -203,7 +203,7 @@ class StringAlign():
 		l = self._l
 		if param.use_stem:
 			l = [[stemmer.stem(word, 0, len(word) - 1) for word in s] for s in l]
-		else param.lowercast:
+		elif param.lowercast:
 			l = [[word.lower() for word in s] for s in l]
 		max_score_top_to_bottom, best_sticks_top_to_bottom = self.__class__._big_anchor_concat_james_helper([l[i] for i in best_comb] + [l[i] for i in another_comb], sticks)
 		max_score_bottom_to_top, best_sticks_bottom_to_top = self.__class__._big_anchor_concat_james_helper([l[i] for i in another_comb] + [l[i] for i in best_comb], after_change_sticks)

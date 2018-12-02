@@ -1,3 +1,5 @@
 API_keys.py
 __pycache__/*
 *.class
+texts/*
+audios/*

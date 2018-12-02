@@ -8,7 +8,7 @@ import weight #deprecated
 import use_reasoner
 from decimal import Decimal
 
-os.chdir(os.path.dirname(__file__))
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 #weight = gl.get_value("weight")
 #threshold = gl.get_value("threshold")
@@ -81,7 +81,7 @@ def make_wav_file(fname, decode_base64str):
 	sampwidth = 2
 	rate = 44100   
 	
-	with wave.open(f'./{dirname}/{fname}', 'wb') as wavefile:
+	with wave.open(f'./{dirName}/{fname}', 'wb') as wavefile:
 		wavefile.setnchannels(channels)
 		wavefile.setsampwidth(sampwidth)
 		wavefile.setframerate(rate)
@@ -96,18 +96,20 @@ def saveText():
 	fname = request.form.get('fname')
 	story = request.form.get('story')
 	query = request.form.get('query')
-	with open(f'./{dirname}/{fname}_story', 'w') as textFile:
+	with open(f'./{dirName}/{fname}_story', 'w') as textFile:
 		textFile.write(story)
-	with open(f'./{dirname}/{fname}_query', 'w') as textFile:
+	with open(f'./{dirName}/{fname}_query', 'w') as textFile:
 		textFile.write(query)
+	result = use_reasoner.run(storypath = f'./{dirName}/{fname}_story', querypath = f'./{dirName}/{fname}_query')
 
-	return ""
+	return jsonify({'result': result})
 
 @app.route('/deleteTexts', methods=['POST'])
 def deleteTexts():
 	fnames = request.form.getlist('fnames')
 	for fname in fnames:
-		os.remove('./texts/' + fname)
+		os.remove('./texts/' + fname + '_story')
+		os.remove('./texts/' + fname + '_query')
 	return ""
 
 if __name__ == "__main__":
