@@ -24,7 +24,11 @@ if not os.path.exists(f'{owl_to_ace}{exe_tail}'):
 	print("Cannot find owl_to_ace")
 
 if not os.path.exists(f'{demo_class}.class'):
-	subprocess.run(['javac', '-cp', reasoner, f'{demo_class}.java'], shell = True)
+	subprocess.run(
+		['javac',
+		 '-cp',
+		 reasoner,
+		 f'{demo_class}.java'], shell = True)
 
 def run(storypath, querypath):
 	with open(f'{storypath}.owl', 'wb') as file:
@@ -33,7 +37,14 @@ def run(storypath, querypath):
 	with open(f'{querypath}.owl', 'wb') as file:
 		q = subprocess.run(ape_command(filename = querypath, uri = f'{URI}_query'), capture_output = True)
 		file.write(q.stdout)
-	result = subprocess.run(['java', '-cp', f'''.{';' if plat == 'Windows' else ':'}{reasoner}''', demo_class, 'e', os.path.abspath(f'{storypath}.owl'), os.path.abspath(f'{querypath}.owl')], capture_output = True, shell = True)
+	result = subprocess.run(
+		['java',
+		 '-cp',
+		 f'''.{';' if plat == 'Windows' else ':'}{reasoner}''',
+		 demo_class,
+		 'e',
+		 os.path.abspath(f'{storypath}.owl'),
+		 os.path.abspath(f'{querypath}.owl')], capture_output = True, shell = True)
 	#print(result.stdout)
 	if b'true' in result.stdout:
 		return 'True'
