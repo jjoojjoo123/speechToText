@@ -31,15 +31,17 @@
 	var fnames = [];
 
 	function uploadText() {
-		var text = document.getElementById("input_text").value
+		var story = document.getElementById("story").value;
+    var query = document.getElementById("query").value;
 
-	    if (text != '') {
-	      	var filename = (new Date().toISOString() + '.txt').replace(/:/g, "_");
+	    if (story != '' && query != '') {
+	      	var filename = (new Date().toISOString()).replace(/:/g, "_");
 	      	fnames.push(filename);
 
 	      	var fd = new FormData();
 	      	fd.append('fname', filename);
-	      	fd.append('text', text);
+	      	fd.append('story', story);
+          fd.append('query', query);
 	      	$.ajax({
 	          type: 'POST',
 	          url: '/saveText',
@@ -47,6 +49,8 @@
 	          processData: false,
 	          contentType: false
       		}).done(function(data) {
+            results_text = document.getElementById("output");
+            results_text.innerHTML = data['result'];
       			__log('Upload to server successfully.');
       		}).fail(function(jqXHR, textStatus, error) {
               __log('Upload to server failed')
