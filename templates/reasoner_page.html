@@ -22,10 +22,10 @@
   <button id="upload_text" onclick="uploadText();">start reason</button>
 
   <h2>Output</h2>
-  <pre id="output"></pre>
+  <pre id="output">Waiting for a query...</pre>
 
   <h2>Log</h2>
-  <pre id="log"></pre>
+  <pre id="log">initializing...OK!</pre>
 
 	<script>
 	var fnames = [];
@@ -37,6 +37,9 @@
 	    if (story != '' && query != '') {
 	      	var filename = (new Date().toISOString()).replace(/:/g, "_");
 	      	fnames.push(filename);
+          results_text = document.getElementById("output");
+          results_text.innerHTML = 'Reasoning...';
+          __log('Saving and Reasoning...');
 
 	      	var fd = new FormData();
 	      	fd.append('fname', filename);
@@ -49,9 +52,12 @@
 	          processData: false,
 	          contentType: false
       		}).done(function(data) {
+            __log('Upload to server successfully.');
             results_text = document.getElementById("output");
-            results_text.innerHTML = data['result'];
-      			__log('Upload to server successfully.');
+            if(data['result'] == 'True')
+              results_text.innerHTML = 'Yes, '.concat(query);
+            else if(data['result'] == 'False')
+              results_text.innerHTML = 'No, the thing "'.concat(query).concat('" is False.');
       		}).fail(function(jqXHR, textStatus, error) {
               __log('Upload to server failed')
           	});
