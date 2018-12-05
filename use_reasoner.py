@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import platform
 
@@ -8,7 +9,7 @@ ape = 'ape'
 owl_to_ace = 'owl_to_ace'
 demo_class = 'Demo'
 
-ape_command = lambda filename, uri: [ape, '-file', filename, '-solo', 'owlxml', '-uri', uri]
+ape_command = lambda filename: [ape, '-file', filename, '-solo', 'owlxml']
 owl_to_ace_command = lambda filename: [owl_to_ace, '-xml', filename]
 
 plat = platform.system()
@@ -32,11 +33,11 @@ if not os.path.exists(f'{demo_class}.class'):
 
 def run(storypath, querypath):
 	with open(f'{storypath}.owl', 'wb') as file:
-		s = subprocess.run(ape_command(filename = storypath, uri = f'{URI}_story'), capture_output = True)
+		s = subprocess.run(ape_command(filename = storypath), capture_output = True)
 		file.write(s.stdout)
 	with open(f'{querypath}.owl', 'wb') as file:
-		q = subprocess.run(ape_command(filename = querypath, uri = f'{URI}_query'), capture_output = True)
-		file.write(q.stdout)
+		q = subprocess.run(ape_command(filename = querypath), capture_output = True)
+		file.write(re.sub(b'ontologyIRI=".*"', b'ontologyIRI=""', q.stdout))
 	result = subprocess.run(
 		['java',
 		 '-cp',
