@@ -1,6 +1,12 @@
 # speechToText
 資管專題
 
+## Python version
+Python 3.7+ is required because subprocess.run receives capture_output parameter.
+
+## SWI-Prolog
+Install the newest version is OK.
+
 ## Python虛擬環境
 ### 安裝virtualenv
 pip install virtualenv
@@ -26,9 +32,11 @@ pip install Flask
 pip install numpy
 
 or install by wheel: https://www.lfd.uci.edu/~gohlke/pythonlibs/
-#### networkx (optional)
+#### networkx (optional, one of networkx and pyswip is needed)
 pip install networkx
-#### pyswip (optional)
-**Need SWI-Prolog background**
+#### pyswip (optional, one of networkx and pyswip is needed)
+套件本身需要SWI-Prolog的環境才能安裝
+
+由於之前已經載明了需要SWI-Prolog的環境，所以這個條件應是自動滿足。
 
 pip install pyswip
