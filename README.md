@@ -19,7 +19,7 @@ virtualenv 子資料夾名稱
 將創一個子資料夾作為虛擬環境
 
 ### 切換虛擬環境
-(Linux)那個子資料夾/bin/activate
+(Linux)source 那個子資料夾/bin/activate
 
 (Windows)那個子資料夾\Scripts\activate
 
@@ -28,10 +28,16 @@ virtualenv 子資料夾名稱
 ### 模組
 #### Flask
 pip install Flask
+
+*import flask*
 #### numpy
 pip install numpy
 
 or install by wheel: https://www.lfd.uci.edu/~gohlke/pythonlibs/
+#### SpeechRecognition
+pip install SpeechRecognition
+
+*import speech_recognition*
 #### networkx (optional, one of networkx and pyswip is needed)
 pip install networkx
 #### pyswip (optional, one of networkx and pyswip is needed)
