@@ -45,11 +45,11 @@ def run(storypath, querypath):
 		 demo_class,
 		 'e',
 		 os.path.abspath(f'{storypath}.owl'),
-		 os.path.abspath(f'{querypath}.owl')], capture_output = True, shell = True)
+		 os.path.abspath(f'{querypath}.owl')], capture_output = True, shell = (True if plat == 'Windows' else False))
 	#print(result.stdout)
 	if b'true' in result.stdout:
 		return 'True'
 	elif b'false' in result.stdout:
 		return 'False'
 	else:
-		return 'None'
+		return result.stdout.decode()

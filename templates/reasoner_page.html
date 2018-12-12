@@ -58,6 +58,8 @@
               results_text.innerHTML = 'Yes, '.concat(query);
             else if(data['result'] == 'False')
               results_text.innerHTML = 'No, the thing "'.concat(query).concat('" is False.');
+            else
+              results_text.innerHTML = data['result'];
       		}).fail(function(jqXHR, textStatus, error) {
               __log('Upload to server failed')
           	});
