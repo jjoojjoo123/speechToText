@@ -9,6 +9,8 @@ ape = 'ape'
 owl_to_ace = 'owl_to_ace'
 demo_class = 'Demo'
 
+debug = True
+
 ape_command = lambda filename: [ape, '-file', filename, '-solo', 'owlxml']
 owl_to_ace_command = lambda filename: [owl_to_ace, '-xml', filename]
 
@@ -47,6 +49,9 @@ def run(storypath, querypath):
 		 os.path.abspath(f'{storypath}.owl'),
 		 os.path.abspath(f'{querypath}.owl')], capture_output = True, shell = (True if plat == 'Windows' else False))
 	#print(result.stdout)
+	if not debug:
+		os.remove(f'{storypath}.owl')
+		os.remove(f'{querypath}.owl')
 	if b'true' in result.stdout:
 		return 'True'
 	elif b'false' in result.stdout:
