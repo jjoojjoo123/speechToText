@@ -1,5 +1,6 @@
 import wave
 import os
+import ssl
 from flask import Flask, render_template, request, jsonify
 import web_recognize
 import final_result
@@ -9,6 +10,7 @@ import use_reasoner
 from decimal import Decimal
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
+ssl._create_default_https_context = ssl._create_unverified_context
 
 #weight = gl.get_value("weight")
 #threshold = gl.get_value("threshold")
