@@ -202,7 +202,7 @@ class RecordingFile(Listener):
 #                sphinx_result ="Exception: sphinx cannot recognize!" 
 #                print(sphinx_result)
             print("-------------------------------")
-            results = [google_result, ibm_result, wit_result]
+            results = [google_result, ibm_result, wit_result, houndify_result]
             return results
 
     def write_text(self, results):
