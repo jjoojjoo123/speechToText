@@ -1,7 +1,7 @@
 import re
 import numpy as np
 from itertools import combinations, product, chain
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Optional
 from collections import namedtuple, deque, defaultdict
 from disjoint_set import disjoint_set
 from copy import deepcopy
@@ -33,14 +33,14 @@ class Param():
 		return self._base_point
 	@base_point.setter
 	def base_point(self, f):
-		#f :: List[str] -> List[str] -> float
+		#f :: List[str] -> List[str] -> ScoreType
 		self._base_point = f
 	@property
 	def merge_point(self):
 		return self._merge_point
 	@merge_point.setter
 	def merge_point(self, f):
-		#f :: (List[str], List[str]) -> (List[str], List[str]) -> (float, List[anchor]) -> (float, List[anchor]) -> float
+		#f :: (List[str], List[str]) -> (List[str], List[str]) -> (ScoreType, List[anchor]) -> (ScoreType, List[anchor]) -> ScoreType
 		self._merge_point = f
 	@property
 	def base_confidence(self):
@@ -53,7 +53,7 @@ class Param():
 		return self._score_map if self._score_map is not None else lambda c, state: {i: j.similarity for i, j in state.Dict.items()}
 	@score_map.setter
 	def score_map(self, f):
-		#f :: List[float] -> State[int, Dict[(int, int): Ans(float, List[anchor])]] -> Dict[(int, int): float]
+		#f :: List[ScoreType] -> State[int, Dict[(int, int): Ans(ScoreType, List[anchor])]] -> Dict[(int, int): ScoreType]
 		self._score_map = f
 	@property
 	def use_stem(self):
@@ -158,7 +158,7 @@ class StringAlign():
 			#get = get[0], list(get[1])
 			state.Dict[(i, j)] = get
 		self._state = state
-	def big_anchor_concat_heuristic(self, param: Param, confidence: list = None):
+	def big_anchor_concat_heuristic(self, param: Param, confidence: Optional[list] = None):
 		"""
 		provisional big-anchor function
 		"""
@@ -651,7 +651,7 @@ class StringAlign():
 			anchors
 			memo: not used in this function. just pass it into _compare_detail
 			now_anchor: meaning which anchor is fixed at the very step.
-		output: ans :: Ans(float, List[anchor]), as the highest similarity, anchors, same as _compare_detail
+		output: ans :: Ans(ScoreType, List[AnchorType]), as the highest similarity, anchors, same as _compare_detail
 		"""
 		if now_anchor is None: #base case
 			return param.base_point(l1, l2), []
@@ -678,7 +678,7 @@ class StringAlign():
 				init_value: the starting point(score) meaning the lower bound of scoring algorithm
 			anchors
 			memo: a dict recording all results of having-appeared situations made of l1, l2, and anchors.
-		output: ans :: Ans(float, List[anchor]), as the highest similarity, anchors, same as _compare_split
+		output: ans :: Ans(ScoreType, List[AnchorType]), as the highest similarity, anchors, same as _compare_split
 		"""
 		hashable_sign = (tuple(l1), tuple(l2), tuple([tuple(i) for i in anchors]))
 		if hashable_sign not in memo:
