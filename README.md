@@ -274,7 +274,7 @@ s2 = B 'C' D E F
 
 #### use_reasoner.py
 在這個版本沒有被前端調用  
-其實templates/reasoner\_page.html就是要來接這個的
+其實templates/reasoner\_page.html就是要來接這個的  
 這是一個用shell把python與[owl\_to\_ace](https://github.com/Kaljurand/owl-verbalizer)、[ape](https://github.com/Attempto/APE)與[HermiT reasoner](http://www.hermit-reasoner.com/)等工具接上的小程式  
 ape負責將使用者輸入的ACE轉為OWL，owl\_to\_ace則將處理後的OWL轉回ACE。這兩個都需要用Prolog編譯成執行檔再使用  
 並使用HermiT reasoner進行reasoning
