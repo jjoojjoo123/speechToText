@@ -285,3 +285,98 @@ ape負責將使用者輸入的ACE轉為OWL，owl\_to\_ace則將處理後的OWL�
 ### 後記
 以後再補充  
 果然不該在一年半後才回來寫細節，細節都忘得差不多了
+
+
+# 2018資管專題 —— 解謎機器人
+
+## Example Story
+Every person is an animal.
+Every animal eats the food.
+Nick is a person.
+
+
+Every customer owns a card that is blue.
+Every customer is a person.
+Every person who owns a red card is a customer.
+Nick is a person who owns a card that is blue.
+Bob is a person.
+It is false that Bob does not own a card that is red.
+
+Pinocchio is a puppet.
+It is true that Pinocchio tells a lie.
+Every puppet that tells a lie has a long nose.
+Dumbo is an elephant.
+Every elephant has a long nose.
+
+
+## 研究目標
+製作出一個軟體系統能夠模擬人類記憶、思考、推論一連串的機制，進而發展人機互動、邏輯檢查、謎題推論等應用。為了讓題目可以收斂到目前技術能及的範圍內，我們把目標限縮在解謎上，使用者透過語音輸入謎面後經過處理產生一個知識檔，最後再由輸入的問句中推論得到解答並回傳給使用者。
+
+
+## 知識本體論 Ontology
+An ontology encompasses a representation, formal naming, and definition of the categories, properties, and relations between the concepts, data, and entities that substantiate one, many, or all domains.
+Ontology比一般人熟知的簡單邏輯還要多了一項「描述」的能力，可以記錄謎面文字敘述中每一個名詞存在的意義、彼此之間的關聯。
+
+## 描述邏輯 Description Logic
+- 描述邏輯（description logic）是一種用於知識表示的邏輯語言和以其為對象的推理方法，是知識本體論的其中一種語法形式，主要用於描述概念分類及其概念之間的關係。
+
+
+- 一個描述邏輯系統中的名字可分為概念（concept），屬性（role）和個體（individual）。
+
+- Concepts represent classes (sets of individuals)
+    Roles represent relations between pairs of individuals
+
+- Use small sets of constructors for building complex concepts and roles
+
+- Examples
+    basic_DLs_2017.pptx p.12
+
+- How do we find implicit knowledge?
+    Implicit knowledge can be inferred automatically with the help of inference procedures.
+
+
+
+## 網路本體語言 Web Ontology Language（OWL）
+一種特殊的檔案儲存格式用來表示一個 Ontology。
+
+- Compare to Description Logic
+
+| OWL(Web Ontology Language) | DL (Description Logic) |
+| -------- | -------- | 
+| Class    | Concept  |
+| Property | Role  |
+| Object   | Individual  |
+
+
+## Attempto Controlled English（ACE）
+一種自然語言的文法，主要用來呈現簡單的二元關係，因為自然語言處理是比較困難的議題，目前世界上各大商業軟體公司都在尋找解答的難題，在這個專題中使用 ACE 可以將自然語言的謎面簡化成軟體系統能夠處理的難度。
+
+## Protégé
+一個 Ontology 編輯器，由史丹佛大學維護的開源專案，開發語言採用Java，屬於開放原始碼軟體。它提供了完整的 API 發展出豐富的插件生態。我們主要使用Protégé的兩個插件： ACE Parsing Engine（APE）負責解析 ACE 文法的句子(ACE to Ontology or Ontology to ACE)、Reasoner 負責推論、檢查 Ontology。
+
+## 系統架構
+自然語言 -> 邏輯語言 -> 邏輯推理 -> 自然語言
+### 1.  前端輸入介面
+- Recorder.js
+    提供了HTML環境下錄音的功能。
+- 音訊回傳
+    用jQuery的ajax技術把錄製好的聲音訊號回傳後端。
+
+### 2.  後端處理系統
+- 網頁後端
+採用flask作為網頁框架，並以python作為網頁後端開發語言。Flask是一個使用Python編寫的輕量級Web應用框架。
+- 音訊處理
+    經過base64解碼後在伺服器端寫成wav音檔(速度調為0.8~0.9倍以利後續辨識)。
+- 語音辨識使用
+    使用python speechRecognition套件，分別將語音訊號餵入4種API(google, ibm, wit, houndify)，並把4句結果交由辨識結果合成的程式綜合評選出最佳的token重新組合。
+- 辨識結果合成
+    如何把四句不一定正確的英文字串取出最有可能的tokens組合成最接近原句的英文句?
+    1. tokenization
+    2. normalization (ex: to lowercase, stemming)
+    3. recursion 演算法 or iteration 演算法
+    recursion 演算法 : 遞迴的比較四句string的tokens，一邊算token的分一邊更新最佳的竹籤。
+    4. scoring & voting
+    設定權重及參數，採同單字串聯、不同單字多數決的方式，找出4個API辨識出來的最大公因數，得出最佳組合。
+    5. token recombination
+      
+- 邏輯推論
